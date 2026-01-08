@@ -55,8 +55,8 @@ class ApiService {
     }
   }
 
-  /// PUT - Update existing data
-  // PUT request - update existing dataic data}) async {
+  // PUT request - update existing data
+  Future<Response> put(String endpoint, {dynamic data}) async {
     try {
       return await _dio.put(endpoint, data: data);
     } on DioException catch (e) {
@@ -64,18 +64,18 @@ class ApiService {
     }
   }
 
-  /// DELETE - Remove data
-  /// Example: "Delete event #5"
-  Fu DELETE request - remove data
+  // DELETE request - remove data
+  Future<Response> delete(String endpoint) async {
+    try {
       return await _dio.delete(endpoint);
     } on DioException catch (e) {
       throw _handleError(e);
     }
   }
 
-  // ==================== ERROR HANDLING ====================
-  // When something goes wrong, explain it in simple terms
-Handle errors and return user-friendly messages    switch (error.type) {
+  // Handle errors and return user-friendly messages
+  String _handleError(DioException error) {
+    switch (error.type) {
       case DioExceptionType.connectionTimeout:
         return 'Connection timeout - Check your internet!';
       
@@ -89,6 +89,7 @@ Handle errors and return user-friendly messages    switch (error.type) {
         // Server responded but with error (404, 500, etc.)
         final statusCode = error.response?.statusCode;
         switch (statusCode) {
+          case 400:
             return 'Bad request - Check your data!';
           case 401:
             return 'Unauthorized - Please log in again';

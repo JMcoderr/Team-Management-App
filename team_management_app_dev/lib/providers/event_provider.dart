@@ -33,14 +33,28 @@ final pastEventsProvider = FutureProvider<List<Event>>((ref) async {
 });
 
 // State provider for search query
-final searchQueryProvider = StateProvider.autoDispose<String>((ref) {
-  return '';
+final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(() {
+  return SearchQueryNotifier();
 });
 
+class SearchQueryNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+  
+  void update(String query) => state = query;
+}
+
 // State provider for selected filter tab
-final selectedFilterProvider = StateProvider.autoDispose<int>((ref) {
-  return 0;
+final selectedFilterProvider = NotifierProvider<SelectedFilterNotifier, int>(() {
+  return SelectedFilterNotifier();
 });
+
+class SelectedFilterNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  
+  void update(int index) => state = index;
+}
 
 // Provider for filtered events (combines search + filter)
 final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
@@ -55,15 +69,15 @@ final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
       if (selectedFilter == 1) {
         filtered = events.where((e) => e.type == 'upcoming').toList();
       } else if (selectedFilter == 2) {
-        filtered = evebased on selected tab
-      var filtered = events;
-      if (selectedFilter == 1) {
-        filtered = events.where((e) => e.type == 'upcoming').toList();
-      } else if (selectedFilter == 2) {
         filtered = events.where((e) => e.type == 'past').toList();
       }
 
-      // Apply search if there's at.location.toLowerCase().contains(query);
+      // Apply search if there's a query
+      if (searchQuery.isNotEmpty) {
+        final query = searchQuery.toLowerCase();
+        filtered = filtered.where((event) {
+          return event.title.toLowerCase().contains(query) ||
+                 event.location.toLowerCase().contains(query);
         }).toList();
       }
 

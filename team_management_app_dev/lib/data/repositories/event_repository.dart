@@ -91,6 +91,8 @@ class EventRepository {
   }
 
   // Update an existing event
+  Future<Event> updateEvent(int id, Event event) async {
+    try {
       print('🌐 Updating event #$id...');
       
       final response = await _apiService.put('/events/$id', data: event.toJson());
@@ -108,10 +110,10 @@ class EventRepository {
     }
   }
 
-  // ==================== DELETE EVENT ====================
-  /// Delete an event
-  /// Like asking librarian: "Remove book #5 from collection"
-  FutDelete an event
+  // Delete an event
+  Future<void> deleteEvent(int id) async {
+    try {
+      print('🌐 Deleting event #$id...');
       
       await _apiService.delete('/events/$id');
       
@@ -132,16 +134,16 @@ class EventRepository {
     final allEvents = await getEvents();
     return allEvents.where((event) => event.type == 'upcoming').toList();
   }
-  /// Get only past events
+  // Get only past events
   Future<List<Event>> getPastEvents() async {
     final allEvents = await getEvents();
-    eturn allEvents.where((event) => event.type == 'past').toList();
+    return allEvents.where((event) => event.type == 'past').toList();
   }
 
-  /// Search events by query (title or location)
+  // Search events by query (title or location)
   Future<List<Event>> searchEvents(String query) async {
     final allEvents = await getEvents();
-     Search events by title or location
+    final lowerQuery = query.toLowerCase();
     
     return allEvents.where((event) {
       return event.title.toLowerCase().contains(lowerQuery) ||
@@ -149,15 +151,16 @@ class EventRepository {
     }).toList();
   }
 
-  // ==================== CACHE MANAGEMENT ====================
-  ///Clear cached data
+  // Clear cached data
+  void _clearCache() {
     _cachedEvents = null;
     _lastFetchTime = null;
     print('🗑️ Cache cleared');
   }
 
-  /// Force refresh events (ignore cache)
+  // Force refresh events (ignore cache)
   Future<List<Event>> refreshEvents() async {
-     Force refresh - ignore cache
+    _clearCache();
+    return await getEvents();
   }
 }

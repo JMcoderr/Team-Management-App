@@ -29,7 +29,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             child: TextField(
               onChanged: (value) {
                 // Update search query in provider
-                ref.read(searchQueryProvider.notifier).state = value;
+                ref.read(searchQueryProvider.notifier).update(value);
               },
               decoration: InputDecoration(
                 hintText: 'Search events...',
@@ -83,8 +83,8 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     );
   }
 
-  /// Helper: Build a filter chip (All/Upcoming/Past button)
-  Wi Helper to build filter chips
+  // Helper to build filter chips
+  Widget _buildFilterChip(String label, int index) {
     final selectedFilter = ref.watch(selectedFilterProvider);
     final bool isSelected = selectedFilter == index;
 
@@ -92,8 +92,8 @@ class _EventsPageState extends ConsumerState<EventsPage> {
       label: Text(label),
       selected: isSelected,
       onSelected: (bool selected) {
-        // UPDATE the bulletin board
-        ref.pdate selected filterder.notifier).state = index;
+        // Update selected filter
+        ref.read(selectedFilterProvider.notifier).update(index);
       },
       selectedColor: Colors.blue,
       backgroundColor: Colors.grey[200],
@@ -124,11 +124,11 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         ),
       ),
 
-      // STATE 2: Error (show error message)
+      // Error state
       error: (error, stack) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-         Error state
+          children: [
             Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
@@ -144,23 +144,23 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () {
-                // Retry: Refresh the provider
-                ref.refresh(eventsProvider);
+                // Refresh the provider
+                ref.invalidate(eventsProvider);
               },
               icon: const Icon(Icons.refresh),
-              label: con by refreshingTry Again'),
+              label: const Text('Try Again'),
             ),
           ],
         ),
       ),
 
-      // STATE 3: Success (show the events!)
+      // Success state - show events
       data: (events) {
-        // If no events match, show empty state
+        // Show empty state if no events match
         if (events.isEmpty) {
-          uccess state - show events
-      data: (events) {
-        // Show empty state if no events matchent.center,
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
@@ -180,13 +180,13 @@ class _EventsPageState extends ConsumerState<EventsPage> {
           );
         }
 
-        // Show list of events from API
-        return RefreshIndicator(
-          // Pull-to-refresh: Swipe down to reload from API
-          onRefresh: () async {
-            ref.refrewith pull-to-refresh
+        // Show list of events
         return RefreshIndicator(
           // Swipe down to refresh
+          onRefresh: () async {
+            ref.invalidate(eventsProvider);
+          },
+          child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             itemCount: events.length,
             itemBuilder: (context, index) {

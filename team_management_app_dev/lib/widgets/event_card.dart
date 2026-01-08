@@ -67,7 +67,7 @@ class EventCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Event Title
-                    Tex
+                    Text(
                       title,
                       style: const TextStyle(
                         fontSize: 16,

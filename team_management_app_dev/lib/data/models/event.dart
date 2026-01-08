@@ -51,7 +51,9 @@ class Event {
 
   // ==================== HELPER METHODS ====================
   
-  ///Helper: extract time from date string
+  // Helper: extract time from date string
+  static String _extractTime(String? dateString) {
+    if (dateString == null) return '00:00';
     try {
       final date = DateTime.parse(dateString);
       return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
@@ -60,9 +62,9 @@ class Event {
     }
   }
 
-  /// Determine if event is upcoming or past
+  // Determine if event is upcoming or past
   static String _determineType(String? dateString) {
-     Check if event is in the futureupcoming';
+    if (dateString == null) return 'upcoming';
     try {
       final eventDate = DateTime.parse(dateString);
       return eventDate.isAfter(DateTime.now()) ? 'upcoming' : 'past';
@@ -71,9 +73,9 @@ class Event {
     }
   }
 
-  /// Determine icon type based on title keywords
+  // Determine icon type based on title keywords
   static String _determineIconType(String title) {
-     Figure out which icon to use based on title
+    final lowerTitle = title.toLowerCase();
     
     if (lowerTitle.contains('training') || lowerTitle.contains('practice')) {
       return 'training';
@@ -109,9 +111,9 @@ class Event {
     );
   }
 
-  // ==================== TO STRING ====================
   // For debugging - print event in readable format
-  
-  @ovFor debugging  return 'Event{id: $id, title: $title, date: $date, location: $location}';
+  @override
+  String toString() {
+    return 'Event{id: $id, title: $title, date: $date, location: $location}';
   }
 }
