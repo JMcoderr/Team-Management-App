@@ -3,10 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/event_card.dart';
 import '../providers/event_provider.dart';
 
-/// EventsPage - Shows list of all events with filters
-/// 
-/// ConsumerStatefulWidget = Can watch the bulletin board (providers)
-/// Regular StatefulWidget can't see the bulletin board!
+// Events page - shows list of all events with filters
 class EventsPage extends ConsumerStatefulWidget {
   const EventsPage({Key? key}) : super(key: key);
 
@@ -31,7 +28,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             color: Colors.grey[100],
             child: TextField(
               onChanged: (value) {
-                // UPDATE the bulletin board (everyone sees the change)
+                // Update search query in provider
                 ref.read(searchQueryProvider.notifier).state = value;
               },
               decoration: InputDecoration(
@@ -69,10 +66,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         ],
       ),
 
-      // FLOATING ACTION BUTTON: Add new event
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Open "Add Event" form
+          // TODO: Open add event form
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -88,7 +84,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
   }
 
   /// Helper: Build a filter chip (All/Upcoming/Past button)
-  Widget _buildFilterChip(String label, int index) {
+  Wi Helper to build filter chips
     final selectedFilter = ref.watch(selectedFilterProvider);
     final bool isSelected = selectedFilter == index;
 
@@ -97,7 +93,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
       selected: isSelected,
       onSelected: (bool selected) {
         // UPDATE the bulletin board
-        ref.read(selectedFilterProvider.notifier).state = index;
+        ref.pdate selected filterder.notifier).state = index;
       },
       selectedColor: Colors.blue,
       backgroundColor: Colors.grey[200],
@@ -109,18 +105,14 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     );
   }
 
-  /// Build the list of events FROM THE API
+  // Build the event list from API
   Widget _buildEventList() {
-    // WATCH the bulletin board for filtered events
+    // Watch the filtered events provider
     final filteredEventsAsync = ref.watch(filteredEventsProvider);
 
-    // filteredEventsAsync can be in 3 states:
-    // 1. Loading (fetching from API)
-    // 2. Error (something went wrong)
-    // 3. Data (success! here are the events)
-
+    // Handle loading, error, and success states
     return filteredEventsAsync.when(
-      // STATE 1: Loading (show spinner)
+      // Loading state
       loading: () => const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -136,7 +128,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
       error: (error, stack) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
+         Error state
             Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
@@ -156,7 +148,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                 ref.refresh(eventsProvider);
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+              label: con by refreshingTry Again'),
             ),
           ],
         ),
@@ -166,9 +158,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
       data: (events) {
         // If no events match, show empty state
         if (events.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+          uccess state - show events
+      data: (events) {
+        // Show empty state if no events matchent.center,
               children: [
                 Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
@@ -192,9 +184,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         return RefreshIndicator(
           // Pull-to-refresh: Swipe down to reload from API
           onRefresh: () async {
-            ref.refresh(eventsProvider);
-          },
-          child: ListView.builder(
+            ref.refrewith pull-to-refresh
+        return RefreshIndicator(
+          // Swipe down to refresh
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             itemCount: events.length,
             itemBuilder: (context, index) {
@@ -214,7 +206,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     );
   }
 
-  /// Get icon based on event type
+  // Helper to get icon based on event type
   IconData _getIconForType(String iconType) {
     switch (iconType) {
       case 'training':

@@ -5,8 +5,7 @@ import 'pages/events_page.dart';
 
 void main() {
   runApp(
-    // ProviderScope = Install the bulletin board system
-    // Everything inside can now read/write notes on the board
+    // Wrap app with ProviderScope for Riverpod state management
     const ProviderScope(
       child: MyApp(),
     ),

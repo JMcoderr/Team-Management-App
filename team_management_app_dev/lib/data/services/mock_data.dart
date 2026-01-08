@@ -1,8 +1,6 @@
 import '../models/event.dart';
 
-/// Mock Data - Fake events to use when API is down
-/// 
-/// This is like having canned food in your pantry when the store is closed!
+// Mock data for testing when API is unavailable
 class MockData {
   static List<Event> getMockEvents() {
     return [

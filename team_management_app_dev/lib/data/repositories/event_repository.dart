@@ -2,29 +2,19 @@ import '../models/event.dart';
 import '../services/api_service.dart';
 import '../services/mock_data.dart';
 
-/// EventRepository - The "Librarian" who manages all event data
-/// 
-/// Instead of asking the API directly every time, you ask the librarian
-/// The librarian keeps track of events, caches them, and handles errors
+// Repository to manage event data
 class EventRepository {
-  // The waiter (API service) that talks to the server
   final ApiService _apiService;
 
-  // Cache: Like the librarian's memory of books already fetched
+  // Cache events to avoid unnecessary API calls
   List<Event>? _cachedEvents;
   DateTime? _lastFetchTime;
 
-  // Constructor: Give the librarian an API service to work with
   EventRepository(this._apiService);
 
-  // ==================== GET ALL EVENTS ====================
-  /// Fetch all events from the API
-  /// 
-  /// The librarian checks:
-  /// 1. "Do I remember these events from recently?" → Return from cache
-  /// 2. "No? Let me ask the waiter (API)" → Fetch from server
+  // Fetch all events from API
   Future<List<Event>> getEvents({bool forceRefresh = false}) async {
-    // If we have cached events and they're fresh (< 5 minutes old), use cache
+    // Return cached data if it's less than 5 minutes old
     if (!forceRefresh && 
         _cachedEvents != null && 
         _lastFetchTime != null &&
@@ -36,14 +26,10 @@ class EventRepository {
     try {
       print('🌐 Fetching events from API...');
       
-      // Ask the waiter (API) for events
       final response = await _apiService.get('/events');
-      
-      // Convert JSON response to List of Event objects
       final List<dynamic> jsonList = response.data;
       final events = jsonList.map((json) => Event.fromJson(json)).toList();
       
-      // Save to cache (librarian remembers for next time)
       _cachedEvents = events;
       _lastFetchTime = DateTime.now();
       
@@ -54,21 +40,19 @@ class EventRepository {
       print('❌ Error fetching events from API: $e');
       print('📦 Using mock data as fallback...');
       
-      // If fetch fails but we have cached events, return those
+      // Try to return cached data if available
       if (_cachedEvents != null) {
         print('📚 Returning cached events as fallback');
         return _cachedEvents!;
       }
       
-      // No cache available, use mock data
+      // Last resort: return mock data
       print('✅ Returning mock data (${MockData.getMockEvents().length} events)');
       return MockData.getMockEvents();
     }
   }
 
-  // ==================== GET SINGLE EVENT ====================
-  /// Fetch one specific event by ID
-  /// Like asking librarian: "Show me book #5"
+  // Get a single event by ID
   Future<Event> getEventById(int id) async {
     try {
       print('🌐 Fetching event #$id from API...');
@@ -85,9 +69,7 @@ class EventRepository {
     }
   }
 
-  // ==================== CREATE EVENT ====================
-  /// Create a new event
-  /// Like asking librarian: "Add this new book to the collection"
+  // Create a new event
   Future<Event> createEvent(Event event) async {
     try {
       print('🌐 Creating new event: ${event.title}...');
@@ -97,6 +79,7 @@ class EventRepository {
       
       // Clear cache so next getEvents() fetches fresh data
       _clearCache();
+      _clearCache();  // Clear cache to force refresh
       
       print('✅ Event created successfully: ${newEvent.title}');
       return newEvent;
@@ -107,11 +90,7 @@ class EventRepository {
     }
   }
 
-  // ==================== UPDATE EVENT ====================
-  /// Update an existing event
-  /// Like asking librarian: "Update the info for book #5"
-  Future<Event> updateEvent(int id, Event event) async {
-    try {
+  // Update an existing event
       print('🌐 Updating event #$id...');
       
       final response = await _apiService.put('/events/$id', data: event.toJson());
@@ -132,9 +111,7 @@ class EventRepository {
   // ==================== DELETE EVENT ====================
   /// Delete an event
   /// Like asking librarian: "Remove book #5 from collection"
-  Future<void> deleteEvent(int id) async {
-    try {
-      print('🌐 Deleting event #$id...');
+  FutDelete an event
       
       await _apiService.delete('/events/$id');
       
@@ -155,17 +132,16 @@ class EventRepository {
     final allEvents = await getEvents();
     return allEvents.where((event) => event.type == 'upcoming').toList();
   }
-
   /// Get only past events
   Future<List<Event>> getPastEvents() async {
     final allEvents = await getEvents();
-    return allEvents.where((event) => event.type == 'past').toList();
+    eturn allEvents.where((event) => event.type == 'past').toList();
   }
 
   /// Search events by query (title or location)
   Future<List<Event>> searchEvents(String query) async {
     final allEvents = await getEvents();
-    final lowerQuery = query.toLowerCase();
+     Search events by title or location
     
     return allEvents.where((event) {
       return event.title.toLowerCase().contains(lowerQuery) ||
@@ -174,8 +150,7 @@ class EventRepository {
   }
 
   // ==================== CACHE MANAGEMENT ====================
-  /// Clear the cache (force next fetch to get fresh data)
-  void _clearCache() {
+  ///Clear cached data
     _cachedEvents = null;
     _lastFetchTime = null;
     print('🗑️ Cache cleared');
@@ -183,6 +158,6 @@ class EventRepository {
 
   /// Force refresh events (ignore cache)
   Future<List<Event>> refreshEvents() async {
-    return getEvents(forceRefresh: true);
+     Force refresh - ignore cache
   }
 }

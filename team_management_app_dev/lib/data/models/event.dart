@@ -1,8 +1,5 @@
-/// Event Model - Recipe card that describes what an event looks like
-/// 
-/// When the API sends event data, this class helps us understand it
+// Event model class
 class Event {
-  // PROPERTIES: What info does an event have?
   final int id;
   final String title;
   final String description;
@@ -10,9 +7,8 @@ class Event {
   final String time;
   final String location;
   final String type;  // 'upcoming' or 'past'
-  final String iconType;  // 'soccer', 'training', 'meeting', etc.
+  final String iconType;  // 'soccer', 'training', 'meeting'
 
-  // CONSTRUCTOR: How to create an Event
   Event({
     required this.id,
     required this.title,
@@ -24,20 +20,7 @@ class Event {
     this.iconType = 'event',
   });
 
-  // ==================== FROM JSON ====================
-  // This is like reading a recipe written in another language
-  // JSON = JavaScript Object Notation (the language APIs speak)
-  
-  /// Convert JSON (text) → Event (Dart object)
-  /// 
-  /// Example JSON from API:
-  /// {
-  ///   "id": 1,
-  ///   "title": "Game vs RedOpps",
-  ///   "description": "Championship match",
-  ///   "date": "2026-01-15T14:00:00Z",
-  ///   "location": "Sports Hall A"
-  /// }
+  // Convert JSON from API to Event object
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
       id: json['id'] ?? 0,
@@ -53,9 +36,7 @@ class Event {
     );
   }
 
-  // ==================== TO JSON ====================
-  // Convert Event (Dart object) → JSON (text) to send to API
-  
+  // Convert Event object to JSON for API
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -70,9 +51,7 @@ class Event {
 
   // ==================== HELPER METHODS ====================
   
-  /// Extract time from date string (e.g., "2026-01-15T14:00:00Z" → "14:00")
-  static String _extractTime(String? dateString) {
-    if (dateString == null) return '00:00';
+  ///Helper: extract time from date string
     try {
       final date = DateTime.parse(dateString);
       return '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
@@ -83,7 +62,7 @@ class Event {
 
   /// Determine if event is upcoming or past
   static String _determineType(String? dateString) {
-    if (dateString == null) return 'upcoming';
+     Check if event is in the futureupcoming';
     try {
       final eventDate = DateTime.parse(dateString);
       return eventDate.isAfter(DateTime.now()) ? 'upcoming' : 'past';
@@ -94,7 +73,7 @@ class Event {
 
   /// Determine icon type based on title keywords
   static String _determineIconType(String title) {
-    final lowerTitle = title.toLowerCase();
+     Figure out which icon to use based on title
     
     if (lowerTitle.contains('training') || lowerTitle.contains('practice')) {
       return 'training';
@@ -107,10 +86,7 @@ class Event {
     }
   }
 
-  // ==================== COPY WITH ====================
-  // Create a copy of this event with some values changed
-  // Like "Same order, but change the drink"
-  
+  // Create a copy with some fields changed
   Event copyWith({
     int? id,
     String? title,
@@ -136,8 +112,6 @@ class Event {
   // ==================== TO STRING ====================
   // For debugging - print event in readable format
   
-  @override
-  String toString() {
-    return 'Event{id: $id, title: $title, date: $date, location: $location}';
+  @ovFor debugging  return 'Event{id: $id, title: $title, date: $date, location: $location}';
   }
 }

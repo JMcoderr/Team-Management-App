@@ -3,58 +3,46 @@ import '../data/models/event.dart';
 import '../data/repositories/event_repository.dart';
 import '../data/services/api_service.dart';
 
-// ==================== PROVIDERS ====================
-// Providers = Notes on the bulletin board that everyone can read
-
-/// API Service Provider - The waiter (singleton = one waiter for whole app)
+// Provider for API service (singleton)
 final apiServiceProvider = Provider<ApiService>((ref) {
   return ApiService();
 });
 
-/// Event Repository Provider - The librarian (singleton)
+// Provider for event repository
 final eventRepositoryProvider = Provider<EventRepository>((ref) {
   final apiService = ref.watch(apiServiceProvider);
   return EventRepository(apiService);
 });
 
-/// Events List Provider - The current list of events on the bulletin board
-/// 
-/// This is like a live-updating board:
-/// - When events change, everyone watching sees the update
-/// - AsyncValue = can be loading, error, or success
+// Provider for all events
 final eventsProvider = FutureProvider<List<Event>>((ref) async {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.getEvents();
 });
 
-/// Upcoming Events Provider - Filtered list (only future events)
+// Provider for upcoming events only
 final upcomingEventsProvider = FutureProvider<List<Event>>((ref) async {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.getUpcomingEvents();
 });
 
-/// Past Events Provider - Filtered list (only old events)
+// Provider for past events only
 final pastEventsProvider = FutureProvider<List<Event>>((ref) async {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.getPastEvents();
 });
 
-/// Search Query Provider - What the user is searching for (can change)
+// State provider for search query
 final searchQueryProvider = StateProvider.autoDispose<String>((ref) {
   return '';
 });
 
-/// Selected Filter Provider - Which tab is selected (0=All, 1=Upcoming, 2=Past)
+// State provider for selected filter tab
 final selectedFilterProvider = StateProvider.autoDispose<int>((ref) {
   return 0;
 });
 
-/// Filtered Events Provider - Events that match search + filter
-/// 
-/// This automatically updates when:
-/// - Search query changes
-/// - Selected filter changes
-/// - Events list changes
+// Provider for filtered events (combines search + filter)
 final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
   final eventsAsync = ref.watch(eventsProvider);
   final searchQuery = ref.watch(searchQueryProvider);
@@ -67,15 +55,15 @@ final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
       if (selectedFilter == 1) {
         filtered = events.where((e) => e.type == 'upcoming').toList();
       } else if (selectedFilter == 2) {
+        filtered = evebased on selected tab
+      var filtered = events;
+      if (selectedFilter == 1) {
+        filtered = events.where((e) => e.type == 'upcoming').toList();
+      } else if (selectedFilter == 2) {
         filtered = events.where((e) => e.type == 'past').toList();
       }
 
-      // Apply search query
-      if (searchQuery.isNotEmpty) {
-        final query = searchQuery.toLowerCase();
-        filtered = filtered.where((event) {
-          return event.title.toLowerCase().contains(query) ||
-                 event.location.toLowerCase().contains(query);
+      // Apply search if there's at.location.toLowerCase().contains(query);
         }).toList();
       }
 

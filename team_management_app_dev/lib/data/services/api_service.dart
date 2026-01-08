@@ -1,36 +1,30 @@
 import 'package:dio/dio.dart';
 
-/// ApiService - The "Waiter" that talks to the school API
-/// 
-/// Think of this as the person who takes your order (request) 
-/// and brings back food (data) from the kitchen (server)
+// API Service - handles all HTTP requests to the backend
 class ApiService {
-  // DIO = The phone line to the restaurant
   final Dio _dio;
-
-  // BASE URL = The restaurant's address
+  
   static const String baseUrl = 'https://team-managment-api.dendrowen.com/api/v2';
 
-  // CONSTRUCTOR: Set up the phone line when app starts
+  // Initialize dio with base settings
   ApiService() : _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 10),  // Wait max 10 seconds to connect
-    receiveTimeout: const Duration(seconds: 10),  // Wait max 10 seconds for response
+    connectTimeout: const Duration(seconds: 10),
+    receiveTimeout: const Duration(seconds: 10),
     headers: {
-      'Content-Type': 'application/json',  // We speak JSON language
+      'Content-Type': 'application/json',
       'Accept': 'application/json',
     },
   )) {
-    // Add logging so we can see what's happening (helpful for debugging!)
+    // Add interceptor to log requests/responses for debugging
     _dio.interceptors.add(LogInterceptor(
-      requestBody: true,   // Show what we send
-      responseBody: true,  // Show what we get back
-      error: true,         // Show errors
+      requestBody: true,
+      responseBody: true,
+      error: true,
     ));
   }
 
-  // AUTH TOKEN: Like showing your VIP card to get in
-  // When user logs in, we save their token here
+  // Store auth token when user logs in
   String? _authToken;
 
   void setAuthToken(String token) {
@@ -43,15 +37,7 @@ class ApiService {
     _dio.options.headers.remove('Authorization');
   }
 
-  // ==================== HTTP METHODS ====================
-  // These are like different ways to order:
-  // GET = "What's on the menu?" (read data)
-  // POST = "I want to order this" (create new data)
-  // PUT = "Change my order" (update existing data)
-  // DELETE = "Cancel my order" (remove data)
-
-  /// GET - Fetch data from API
-  /// Example: "Give me all events"
+  // GET request - fetch data
   Future<Response> get(String endpoint) async {
     try {
       return await _dio.get(endpoint);
@@ -60,8 +46,7 @@ class ApiService {
     }
   }
 
-  /// POST - Send new data to API
-  /// Example: "Create a new event with this info"
+  // POST request - create new data
   Future<Response> post(String endpoint, {dynamic data}) async {
     try {
       return await _dio.post(endpoint, data: data);
@@ -71,8 +56,7 @@ class ApiService {
   }
 
   /// PUT - Update existing data
-  /// Example: "Update event #5 with new info"
-  Future<Response> put(String endpoint, {dynamic data}) async {
+  // PUT request - update existing dataic data}) async {
     try {
       return await _dio.put(endpoint, data: data);
     } on DioException catch (e) {
@@ -82,8 +66,7 @@ class ApiService {
 
   /// DELETE - Remove data
   /// Example: "Delete event #5"
-  Future<Response> delete(String endpoint) async {
-    try {
+  Fu DELETE request - remove data
       return await _dio.delete(endpoint);
     } on DioException catch (e) {
       throw _handleError(e);
@@ -92,9 +75,7 @@ class ApiService {
 
   // ==================== ERROR HANDLING ====================
   // When something goes wrong, explain it in simple terms
-
-  String _handleError(DioException error) {
-    switch (error.type) {
+Handle errors and return user-friendly messages    switch (error.type) {
       case DioExceptionType.connectionTimeout:
         return 'Connection timeout - Check your internet!';
       
@@ -108,7 +89,6 @@ class ApiService {
         // Server responded but with error (404, 500, etc.)
         final statusCode = error.response?.statusCode;
         switch (statusCode) {
-          case 400:
             return 'Bad request - Check your data!';
           case 401:
             return 'Unauthorized - Please log in again';

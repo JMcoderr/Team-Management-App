@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
 
-/// EventCard - Reusable widget for displaying event information
-/// Just like StatsCard, but for events!
+// Reusable event card widget
 class EventCard extends StatelessWidget {
-  // PROPERTIES: What data does this card need?
-  final String title;          // Event name: "Team DEVSquad vs RedOpps"
-  final String date;           // Date: "06/10/2025"
-  final String time;           // Time: "14:00"
-  final String location;       // Location: "Sports Hall A"
-  final IconData icon;         // Icon to show (soccer, calendar, etc.)
-  final Color iconColor;       // Color for the icon background
+  final String title;
+  final String date;
+  final String time;
+  final String location;
+  final IconData icon;
+  final Color iconColor;
 
-  // CONSTRUCTOR: When creating an EventCard, you MUST provide these
   const EventCard({
     Key? key,
     required this.title,
@@ -48,7 +45,7 @@ class EventCard extends StatelessWidget {
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              // LEFT: Icon in a colored box
+              // Icon container
               Container(
                 width: 48,
                 height: 48,
@@ -64,14 +61,13 @@ class EventCard extends StatelessWidget {
               ),
               const SizedBox(width: 16),
 
-              // MIDDLE: Event details (title, date, time, location)
+              // Event info
               Expanded(
-                // Expanded = take up remaining space
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Event Title
-                    Text(
+                    Tex
                       title,
                       style: const TextStyle(
                         fontSize: 16,
@@ -81,7 +77,7 @@ class EventCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
 
-                    // Date, Time, Location in a Row
+                    // Date and time row
                     Row(
                       children: [
                         // Date
@@ -104,7 +100,7 @@ class EventCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
 
-                    // Location
+                    // Location row
                     Row(
                       children: [
                         const Icon(Icons.location_on, size: 14, color: Colors.grey),
@@ -113,7 +109,7 @@ class EventCard extends StatelessWidget {
                           child: Text(
                             location,
                             style: const TextStyle(fontSize: 12, color: Colors.grey),
-                            overflow: TextOverflow.ellipsis,  // Cut off if too long
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],
@@ -122,7 +118,7 @@ class EventCard extends StatelessWidget {
                 ),
               ),
 
-              // RIGHT: Arrow icon (shows it's clickable)
+              // Arrow icon
               const Icon(
                 Icons.chevron_right,
                 color: Colors.grey,
