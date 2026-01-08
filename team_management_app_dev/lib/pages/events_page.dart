@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/event_card.dart';
+import '../providers/event_provider.dart';
 
 /// EventsPage - Shows list of all events with filters
-class EventsPage extends StatefulWidget {
+/// 
+/// ConsumerStatefulWidget = Can watch the bulletin board (providers)
+/// Regular StatefulWidget can't see the bulletin board!
+class EventsPage extends ConsumerStatefulWidget {
   const EventsPage({Key? key}) : super(key: key);
 
   @override
-  State<EventsPage> createState() => _EventsPageState();
+  ConsumerState<EventsPage> createState() => _EventsPageState();
 }
 
-class _EventsPageState extends State<EventsPage> {
-  // STATE: Which filter is selected? (0 = All, 1 = Upcoming, 2 = Past)
-  int _selectedFilter = 0;
-
-  // STATE: Search text
-  String _searchQuery = '';
+class _EventsPageState extends ConsumerState<EventsPage> {
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +31,8 @@ class _EventsPageState extends State<EventsPage> {
             color: Colors.grey[100],
             child: TextField(
               onChanged: (value) {
-                setState(() {
-                  _searchQuery = value;
-                });
+                // UPDATE the bulletin board (everyone sees the change)
+                ref.read(searchQueryProvider.notifier).state = value;
               },
               decoration: InputDecoration(
                 hintText: 'Search events...',
@@ -90,15 +89,15 @@ class _EventsPageState extends State<EventsPage> {
 
   /// Helper: Build a filter chip (All/Upcoming/Past button)
   Widget _buildFilterChip(String label, int index) {
-    final bool isSelected = _selectedFilter == index;
+    final selectedFilter = ref.watch(selectedFilterProvider);
+    final bool isSelected = selectedFilter == index;
 
     return FilterChip(
       label: Text(label),
       selected: isSelected,
       onSelected: (bool selected) {
-        setState(() {
-          _selectedFilter = index;
-        });
+        // UPDATE the bulletin board
+        ref.read(selectedFilterProvider.notifier).state = index;
       },
       selectedColor: Colors.blue,
       backgroundColor: Colors.grey[200],
@@ -110,109 +109,122 @@ class _EventsPageState extends State<EventsPage> {
     );
   }
 
-  /// Build the list of events
+  /// Build the list of events FROM THE API
   Widget _buildEventList() {
-    // Mock event data (later: get from database)
-    final List<Map<String, dynamic>> allEvents = [
-      {
-        'title': 'Team DEVSquad vs RedOpps',
-        'date': '15/01/2026',
-        'time': '14:00',
-        'location': 'Sports Hall A',
-        'icon': Icons.sports_soccer,
-        'iconColor': Colors.blue,
-        'type': 'upcoming',
-      },
-      {
-        'title': 'Training Session - Offense',
-        'date': '10/01/2026',
-        'time': '18:00',
-        'location': 'Practice Field',
-        'icon': Icons.fitness_center,
-        'iconColor': Colors.green,
-        'type': 'upcoming',
-      },
-      {
-        'title': 'Team Meeting - Strategy',
-        'date': '12/01/2026',
-        'time': '10:00',
-        'location': 'Conference Room B',
-        'icon': Icons.meeting_room,
-        'iconColor': Colors.orange,
-        'type': 'upcoming',
-      },
-      {
-        'title': 'DEVSquad vs BlueTigers',
-        'date': '05/01/2026',
-        'time': '16:00',
-        'location': 'Sports Hall C',
-        'icon': Icons.sports_soccer,
-        'iconColor': Colors.grey,
-        'type': 'past',
-      },
-      {
-        'title': 'Pre-Season Training',
-        'date': '02/01/2026',
-        'time': '09:00',
-        'location': 'Training Ground',
-        'icon': Icons.fitness_center,
-        'iconColor': Colors.grey,
-        'type': 'past',
-      },
-    ];
+    // WATCH the bulletin board for filtered events
+    final filteredEventsAsync = ref.watch(filteredEventsProvider);
 
-    // FILTER: Apply selected filter
-    List<Map<String, dynamic>> filteredEvents = allEvents;
-    if (_selectedFilter == 1) {
-      // Upcoming only
-      filteredEvents = allEvents.where((e) => e['type'] == 'upcoming').toList();
-    } else if (_selectedFilter == 2) {
-      // Past only
-      filteredEvents = allEvents.where((e) => e['type'] == 'past').toList();
-    }
+    // filteredEventsAsync can be in 3 states:
+    // 1. Loading (fetching from API)
+    // 2. Error (something went wrong)
+    // 3. Data (success! here are the events)
 
-    // SEARCH: Filter by search query
-    if (_searchQuery.isNotEmpty) {
-      filteredEvents = filteredEvents.where((event) {
-        final title = event['title'].toString().toLowerCase();
-        final location = event['location'].toString().toLowerCase();
-        final query = _searchQuery.toLowerCase();
-        return title.contains(query) || location.contains(query);
-      }).toList();
-    }
-
-    // If no events match, show empty state
-    if (filteredEvents.isEmpty) {
-      return Center(
+    return filteredEventsAsync.when(
+      // STATE 1: Loading (show spinner)
+      loading: () => const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text('Loading events from API...'),
+          ],
+        ),
+      ),
+
+      // STATE 2: Error (show error message)
+      error: (error, stack) => Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
-              'No events found',
+              'Oops! Something went wrong',
               style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              error.toString(),
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () {
+                // Retry: Refresh the provider
+                ref.refresh(eventsProvider);
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
             ),
           ],
         ),
-      );
-    }
+      ),
 
-    // Show list of events
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      itemCount: filteredEvents.length,
-      itemBuilder: (context, index) {
-        final event = filteredEvents[index];
-        return EventCard(
-          title: event['title'],
-          date: event['date'],
-          time: event['time'],
-          location: event['location'],
-          icon: event['icon'],
-          iconColor: event['iconColor'],
+      // STATE 3: Success (show the events!)
+      data: (events) {
+        // If no events match, show empty state
+        if (events.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Text(
+                  'No events found',
+                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  ref.watch(searchQueryProvider).isNotEmpty
+                      ? 'Try a different search'
+                      : 'Check back later!',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+          );
+        }
+
+        // Show list of events from API
+        return RefreshIndicator(
+          // Pull-to-refresh: Swipe down to reload from API
+          onRefresh: () async {
+            ref.refresh(eventsProvider);
+          },
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: events.length,
+            itemBuilder: (context, index) {
+              final event = events[index];
+              return EventCard(
+                title: event.title,
+                date: '${event.date.day.toString().padLeft(2, '0')}/${event.date.month.toString().padLeft(2, '0')}/${event.date.year}',
+                time: event.time,
+                location: event.location,
+                icon: _getIconForType(event.iconType),
+                iconColor: event.type == 'upcoming' ? Colors.blue : Colors.grey,
+              );
+            },
+          ),
         );
       },
     );
+  }
+
+  /// Get icon based on event type
+  IconData _getIconForType(String iconType) {
+    switch (iconType) {
+      case 'training':
+        return Icons.fitness_center;
+      case 'meeting':
+        return Icons.meeting_room;
+      case 'match':
+        return Icons.sports_soccer;
+      default:
+        return Icons.event_note;
+    }
   }
 }

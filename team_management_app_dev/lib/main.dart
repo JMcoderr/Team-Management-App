@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/dashboard_page.dart';
-import 'pages/events_page.dart';
 import 'pages/events_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    // ProviderScope = Install the bulletin board system
+    // Everything inside can now read/write notes on the board
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
