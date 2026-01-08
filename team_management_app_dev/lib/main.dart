@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'pages/dashboard_page.dart';
+import 'pages/events_page.dart';
+import 'pages/events_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -137,36 +139,6 @@ class TeamsPage extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text('Your teams will appear here'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// EVENTS PAGE (Placeholder)
-class EventsPage extends StatelessWidget {
-  const EventsPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Events & Matches'),
-        backgroundColor: Colors.blue,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.sports_soccer, size: 100, color: Colors.blue),
-            SizedBox(height: 20),
-            Text(
-              'Events & Matches',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text('Upcoming events will appear here'),
           ],
         ),
       ),
