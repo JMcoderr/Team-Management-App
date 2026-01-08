@@ -46,11 +46,11 @@ class DashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // STATS CARDS IN A GRID (2 cards per row)
+            // STATS CARDS IN A GRID (4 cards per row)
             GridView.count(
               // GridView.count creates a grid layout
               // crossAxisCount = number of columns
-              crossAxisCount: 2,
+              crossAxisCount: 4,
               crossAxisSpacing: 16,  // Space between columns
               mainAxisSpacing: 16,   // Space between rows
               shrinkWrap: true,      // Don't take full height
