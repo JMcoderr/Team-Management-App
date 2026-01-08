@@ -33,8 +33,14 @@ class EventCard extends StatelessWidget {
         onTap: () {
           // TODO: Navigate to event details page
           // For now, just show a message
+          // Clear any existing snackbar first (instant dismiss)
+          ScaffoldMessenger.of(context).clearSnackBars();
+          // Show new snackbar with 1 second duration
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Clicked: $title')),
+            SnackBar(
+              content: Text('Clicked: $title'),
+              duration: const Duration(seconds: 1),
+            ),
           );
         },
         borderRadius: BorderRadius.circular(4),

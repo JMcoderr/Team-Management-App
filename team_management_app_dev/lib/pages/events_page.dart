@@ -74,8 +74,12 @@ class _EventsPageState extends State<EventsPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // TODO: Open "Add Event" form
+          ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Add Event - Coming Soon!')),
+            const SnackBar(
+              content: Text('Add Event - Coming Soon!'),
+              duration: Duration(seconds: 1),
+            ),
           );
         },
         backgroundColor: Colors.blue,
