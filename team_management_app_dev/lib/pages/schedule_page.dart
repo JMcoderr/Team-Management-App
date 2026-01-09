@@ -3,21 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/team_card.dart';
 import '../providers/team_provider.dart';
 
-// Rosters page - shows list of all teams
-class RostersPage extends ConsumerStatefulWidget {
-  const RostersPage({Key? key}) : super(key: key);
+// Schedule page shows list of all teams
+class SchedulePage extends ConsumerStatefulWidget {
+  const SchedulePage({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<RostersPage> createState() => _RostersPageState();
+  ConsumerState<SchedulePage> createState() => _SchedulePageState();
 }
 
-class _RostersPageState extends ConsumerState<RostersPage> {
+class _SchedulePageState extends ConsumerState<SchedulePage> {
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Teams & Rosters'),
+        title: const Text('Schedules'),
         backgroundColor: Colors.blue,
       ),
       body: Column(
@@ -32,7 +32,7 @@ class _RostersPageState extends ConsumerState<RostersPage> {
                 ref.read(teamSearchQueryProvider.notifier).update(value);
               },
               decoration: InputDecoration(
-                hintText: 'Search teams...',
+                hintText: 'Search schedules...',
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: Colors.white,
@@ -55,7 +55,7 @@ class _RostersPageState extends ConsumerState<RostersPage> {
       // Add team button
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Open add team form
+          // Todo: Open add team form
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(

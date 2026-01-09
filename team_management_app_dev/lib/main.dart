@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/events_page.dart';
-import 'pages/rosters_page.dart';
+import 'pages/schedule_page.dart';
 
 void main() {
   runApp(
@@ -38,7 +38,7 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  // 0 = Dashboard, 1 = Teams, 2 = Events, 3 = Roosters, 4 = Routeplanner, 5 = Profile
+  // 0 = Dashboard, 1 = Teams, 2 = Events, 3 = Schedule, 4 = Routeplanner, 5 = Profile
   int _selectedIndex = 0;
 
   // This function runs when user clicks a navigation item
@@ -75,7 +75,7 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.calendar_today),
-                label: Text('Roosters'),
+                label: Text('Schedule'),
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.map),
@@ -110,7 +110,7 @@ class _MainNavigationState extends State<MainNavigation> {
       case 2:
         return const EventsPage();
       case 3:
-        return const RostersPage();
+        return const SchedulePage();
       case 4:
         return const RouteplannerPage();
       case 5:
@@ -159,7 +159,7 @@ class RoostersPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Roosters'),
+        title: const Text('Schedule'),
         backgroundColor: Colors.blue,
       ),
       body: Center(
@@ -169,7 +169,7 @@ class RoostersPage extends StatelessWidget {
             Icon(Icons.calendar_today, size: 100, color: Colors.blue),
             SizedBox(height: 20),
             Text(
-              'Roosters',
+              'Rosters',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),

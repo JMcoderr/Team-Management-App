@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 
-// API Service - handles all HTTP requests to the backend
+// API Service this handles all HTTP requests to the backend
 class ApiService {
   final Dio _dio;
   
@@ -37,7 +37,7 @@ class ApiService {
     _dio.options.headers.remove('Authorization');
   }
 
-  // GET request - fetch data
+  // Get request fetch data
   Future<Response> get(String endpoint) async {
     try {
       return await _dio.get(endpoint);
@@ -46,7 +46,7 @@ class ApiService {
     }
   }
 
-  // POST request - create new data
+  // Post request create new data
   Future<Response> post(String endpoint, {dynamic data}) async {
     try {
       return await _dio.post(endpoint, data: data);
@@ -55,7 +55,7 @@ class ApiService {
     }
   }
 
-  // PUT request - update existing data
+  // Put request  update existing data
   Future<Response> put(String endpoint, {dynamic data}) async {
     try {
       return await _dio.put(endpoint, data: data);
@@ -64,7 +64,7 @@ class ApiService {
     }
   }
 
-  // DELETE request - remove data
+  // Delete request - remove data
   Future<Response> delete(String endpoint) async {
     try {
       return await _dio.delete(endpoint);
