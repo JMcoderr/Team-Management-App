@@ -1,121 +1,386 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'pages/dashboard_page.dart';
+import 'pages/events_page.dart';
+import 'pages/schedule_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    // Wrap app with ProviderScope for Riverpod state management
+    const ProviderScope(
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Team Management App',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MainNavigation(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+// This widget manages navigation between pages
+class MainNavigation extends StatefulWidget {
+  const MainNavigation({Key? key}) : super(key: key);
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MainNavigation> createState() => _MainNavigationState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _MainNavigationState extends State<MainNavigation> {
+  // 0 = Dashboard, 1 = Teams, 2 = Events, 3 = Schedule, 4 = Routeplanner, 5 = Organise
+  int _selectedIndex = 0;
+  // separate tracking for account/settings pages
+  String? _currentPage; // 'account' or 'settings' or null for main pages
 
-  void _incrementCounter() {
+  // when clicking main navigation items
+  void _onDestinationSelected(int index) {
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _selectedIndex = index;
+      _currentPage = null; // clear account/settings selection
+    });
+  }
+  
+  // when clicking account or settings
+  void _onBottomItemSelected(String page) {
+    setState(() {
+      _currentPage = page;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    return Scaffold(
+      body: Row(
+        children: [
+          // LEFT SIDE: Navigation Rail (Sidebar)
+          NavigationRail(
+            selectedIndex: _selectedIndex,  // which item is highlighted
+            onDestinationSelected: _onDestinationSelected,  // what happens on click
+            labelType: NavigationRailLabelType.all,  // show labels always
+            // account and settings buttons at bottom
+            leading: null,
+            trailing: Expanded(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // my profile button
+                      InkWell(
+                        onTap: () => _onBottomItemSelected('account'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: _currentPage == 'account' ? Colors.blue.withOpacity(0.1) : null,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.account_circle,
+                                color: _currentPage == 'account' ? Colors.blue : Colors.grey[700],
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'My Profile',
+                                style: TextStyle(
+                                  color: _currentPage == 'account' ? Colors.blue : Colors.grey[700],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // settings button
+                      InkWell(
+                        onTap: () => _onBottomItemSelected('settings'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: _currentPage == 'settings' ? Colors.blue.withOpacity(0.1) : null,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.settings,
+                                color: _currentPage == 'settings' ? Colors.blue : Colors.grey[700],
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Settings',
+                                style: TextStyle(
+                                  color: _currentPage == 'settings' ? Colors.blue : Colors.grey[700],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            destinations: const [
+              // main menu items at top
+              NavigationRailDestination(
+                icon: Icon(Icons.dashboard),
+                label: Text('Dashboard'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.group),
+                label: Text('Teams'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.sports_soccer),
+                label: Text('Events/matches'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.calendar_today),
+                label: Text('Schedule'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.map),
+                label: Text('Routeplanner'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.event_available),
+                label: Text('Organise'),
+              ),
+            ],
+          ),
+          
+          // DIVIDER: Vertical line between sidebar and content
+          const VerticalDivider(thickness: 1, width: 1),
+          
+          // RIGHT SIDE: Main content area
+          Expanded(
+            child: _buildPage(),  // shows page based on selection
+          ),
+        ],
+      ),
+    );
+  }
+
+  // shows correct page based on what u clicked
+  Widget _buildPage() {
+    // check if account or settings is selected
+    if (_currentPage == 'account') {
+      return const AccountPage();
+    } else if (_currentPage == 'settings') {
+      return const SettingsPage();
+    }
+    
+    // otherwise show main pages
+    switch (_selectedIndex) {
+      case 0:
+        return const DashboardPage();
+      case 1:
+        return const TeamsPage();
+      case 2:
+        return const EventsPage();
+      case 3:
+        return const SchedulePage();
+      case 4:
+        return const RouteplannerPage();
+      case 5:
+        return const OrganisePage();
+      default:
+        return const DashboardPage();
+    }
+  }
+}
+
+// Teams page
+class TeamsPage extends StatelessWidget {
+  const TeamsPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: const Text('Teams'),
+        backgroundColor: Colors.blue,
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.group, size: 100, color: Colors.blue),
+            SizedBox(height: 20),
             Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+              'Teams Page',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text('Your teams will appear here'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Rosters page
+class RoostersPage extends StatelessWidget {
+  const RoostersPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Schedule'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.calendar_today, size: 100, color: Colors.blue),
+            SizedBox(height: 20),
+            Text(
+              'Rosters',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text('Your schedule will appear here'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Routeplanner page
+class RouteplannerPage extends StatelessWidget {
+  const RouteplannerPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Routeplanner'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.map, size: 100, color: Colors.blue),
+            SizedBox(height: 20),
+            Text(
+              'Route Planner',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text('Plan your routes here'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// organise page - for organising events/matches
+class OrganisePage extends StatelessWidget {
+  const OrganisePage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Organise Event'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.event_available, size: 100, color: Colors.blue),
+            SizedBox(height: 20),
+            Text(
+              'Organise Events/Matches',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            Text('create and organise your events here'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// account page - user info and stuff
+class AccountPage extends StatelessWidget {
+  const AccountPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Profile'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.account_circle, size: 100, color: Colors.blue),
+            SizedBox(height: 20),
+            Text(
+              'Your account details will show here',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+    );
+  }
+}
+
+// settings page
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.settings, size: 100, color: Colors.blue),
+            SizedBox(height: 20),
+            Text(
+              'Settings will show here',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+          ],
+        ),
       ),
     );
   }
