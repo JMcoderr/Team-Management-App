@@ -1,6 +1,6 @@
 import '../models/event.dart';
 
-// Mock data for testing when API is unavailable
+// mock events for testing
 class MockData {
   static List<Event> getMockEvents() {
     return [

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/team_card.dart';
-import '../providers/team_provider.dart';
+import '../widgets/event_card.dart';
+import '../providers/event_provider.dart';
 
-// Schedule page shows list of all teams
+// showing YOUR schedule (events from teams you're in)
 class SchedulePage extends ConsumerStatefulWidget {
   const SchedulePage({Key? key}) : super(key: key);
 
@@ -12,82 +12,104 @@ class SchedulePage extends ConsumerStatefulWidget {
 }
 
 class _SchedulePageState extends ConsumerState<SchedulePage> {
+  String? selectedTeam; // which team is selected in dropdown (null = all teams)
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Schedules'),
+        title: const Text('Schedule'),
         backgroundColor: Colors.blue,
       ),
       body: Column(
         children: [
-          // Search bar
+          // filter by team dropdown
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16.0),
             color: Colors.grey[100],
-            child: TextField(
-              onChanged: (value) {
-                // Update search query
-                ref.read(teamSearchQueryProvider.notifier).update(value);
-              },
-              decoration: InputDecoration(
-                hintText: 'Search schedules...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: DropdownButton<String>(
+                value: selectedTeam,
+                isExpanded: true,
+                hint: const Text('All teams'),
+                underline: Container(),
+                icon: const Icon(Icons.arrow_drop_down),
+                items: [
+                  // all teams option
+                  const DropdownMenuItem<String>(
+                    value: null,
+                    child: Row(
+                      children: [
+                        Icon(Icons.group, size: 18, color: Colors.blue),
+                        SizedBox(width: 8),
+                        Text('All teams'),
+                      ],
+                    ),
+                  ),
+                  // TODO: jay will add actual teams later
+                  const DropdownMenuItem<String>(
+                    value: 'Dragons FC',
+                    child: Row(
+                      children: [
+                        Icon(Icons.sports_soccer, size: 18, color: Colors.green),
+                        SizedBox(width: 8),
+                        Text('Dragons FC'),
+                      ],
+                    ),
+                  ),
+                  const DropdownMenuItem<String>(
+                    value: 'Code Warriors',
+                    child: Row(
+                      children: [
+                        Icon(Icons.sports_soccer, size: 18, color: Colors.orange),
+                        SizedBox(width: 8),
+                        Text('Code Warriors'),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedTeam = value;
+                  });
+                },
               ),
             ),
           ),
 
-          // Team list
+          // event list for your teams
           Expanded(
-            child: _buildTeamList(),
+            child: _buildEventList(),
           ),
         ],
-      ),
-
-      // Add team button
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Todo: Open add team form
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Add Team - Coming Soon!'),
-              duration: Duration(seconds: 1),
-            ),
-          );
-        },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add),
       ),
     );
   }
 
-  // Build team list
-  Widget _buildTeamList() {
-    final filteredTeamsAsync = ref.watch(filteredTeamsProvider);
+  // showing YOUR events (from teams you're in)
+  Widget _buildEventList() {
+    // get all events first
+    final eventsData = ref.watch(eventsProvider);
 
-    return filteredTeamsAsync.when(
-      // Loading state
+    return eventsData.when(
+      // when loading
       loading: () => const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             CircularProgressIndicator(),
             SizedBox(height: 16),
-            Text('Loading teams...'),
+            Text('Loading your schedule...'),
           ],
         ),
       ),
 
-      // Error state
+      // if error happens
       error: (error, stack) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -95,7 +117,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
             Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
             Text(
-              'Oops! Something went wrong',
+              'Something went wrong...',
               style: TextStyle(fontSize: 18, color: Colors.grey[600]),
             ),
             const SizedBox(height: 8),
@@ -107,8 +129,8 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: () {
-                // Refresh
-                ref.invalidate(teamsProvider);
+                // try again
+                ref.invalidate(eventsProvider);
               },
               icon: const Icon(Icons.refresh),
               label: const Text('Try Again'),
@@ -117,25 +139,34 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
         ),
       ),
 
-      // Success state
-      data: (teams) {
-        // Empty state
-        if (teams.isEmpty) {
+      // when we got the data
+      data: (events) {
+        // filter events by selected team if any
+        final filteredEvents = selectedTeam == null
+            ? events // show all events
+            : events.where((event) {
+                // TODO: when jay adds team data to events, filter properly
+                // for now just showing all events
+                return true;
+              }).toList();
+
+        // if no events
+        if (filteredEvents.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.group_off, size: 64, color: Colors.grey[400]),
+                Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
                 const SizedBox(height: 16),
                 Text(
-                  'No teams found',
+                  'No events found',
                   style: TextStyle(fontSize: 18, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  ref.watch(teamSearchQueryProvider).isNotEmpty
-                      ? 'Try a different search'
-                      : 'Create your first team!',
+                  selectedTeam == null
+                      ? 'No events scheduled yet'
+                      : 'No events for this team',
                   style: TextStyle(fontSize: 14, color: Colors.grey[500]),
                 ),
               ],
@@ -143,31 +174,37 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
           );
         }
 
-        // Show teams
+        // showing events in a list
         return RefreshIndicator(
-          // Swipe down to refresh
           onRefresh: () async {
-            ref.invalidate(teamsProvider);
+            // refresh when pulled down
+            ref.invalidate(eventsProvider);
           },
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 8),
-            itemCount: teams.length,
-            itemBuilder: (context, index) {
-              final team = teams[index];
-              return TeamCard(
-                name: team.name,
-                description: team.description,
-                memberCount: team.memberCount,
-                onTap: () {
-                  // Show team details
-                  ScaffoldMessenger.of(context).clearSnackBars();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Viewing ${team.name} details'),
-                      duration: const Duration(seconds: 1),
-                    ),
-                  );
-                },
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            itemCount: filteredEvents.length,
+            itemBuilder: (context, i) {
+              final event = filteredEvents[i];
+              
+              // picking icon based on type
+              IconData icon;
+              if (event.iconType == 'match') {
+                icon = Icons.sports_soccer;
+              } else if (event.iconType == 'training') {
+                icon = Icons.fitness_center;
+              } else if (event.iconType == 'meeting') {
+                icon = Icons.people;
+              } else {
+                icon = Icons.event;
+              }
+              
+              return EventCard(
+                title: event.title,
+                date: '${event.date.day}/${event.date.month}/${event.date.year}',
+                location: event.location,
+                time: event.time,
+                icon: icon,
+                iconColor: Colors.blue, // all blue icons
               );
             },
           ),

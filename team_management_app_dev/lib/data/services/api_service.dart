@@ -1,12 +1,12 @@
 import 'package:dio/dio.dart';
 
-// API Service this handles all HTTP requests to the backend
+// handling http requests to backend
 class ApiService {
   final Dio _dio;
   
   static const String baseUrl = 'https://team-managment-api.dendrowen.com/api/v2';
 
-  // Initialize dio with base settings
+  // dio setup
   ApiService() : _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
     connectTimeout: const Duration(seconds: 10),
@@ -24,7 +24,7 @@ class ApiService {
     ));
   }
 
-  // Store auth token when user logs in
+  // auth token storage
   String? _authToken;
 
   void setAuthToken(String token) {
@@ -55,7 +55,7 @@ class ApiService {
     }
   }
 
-  // Put request  update existing data
+  // put request
   Future<Response> put(String endpoint, {dynamic data}) async {
     try {
       return await _dio.put(endpoint, data: data);
@@ -73,7 +73,7 @@ class ApiService {
     }
   }
 
-  // Handle errors and return user-friendly messages
+  // handling errors
   String _handleError(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:

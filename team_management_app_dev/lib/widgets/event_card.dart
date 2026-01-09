@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Reusable event card widget
+// event card widget
 class EventCard extends StatelessWidget {
   final String title;
   final String date;

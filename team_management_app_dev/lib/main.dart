@@ -38,14 +38,23 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  // 0 = Dashboard, 1 = Teams, 2 = Events, 3 = Schedule, 4 = Routeplanner, 5 = Profile
+  // 0 = Dashboard, 1 = Teams, 2 = Events, 3 = Schedule, 4 = Routeplanner, 5 = Organise
   int _selectedIndex = 0;
+  // separate tracking for account/settings pages
+  String? _currentPage; // 'account' or 'settings' or null for main pages
 
-  // This function runs when user clicks a navigation item
+  // when clicking main navigation items
   void _onDestinationSelected(int index) {
     setState(() {
-      _selectedIndex = index;  // Update the selected page
-      // setState() tells Flutter to rebuild the widget with new state
+      _selectedIndex = index;
+      _currentPage = null; // clear account/settings selection
+    });
+  }
+  
+  // when clicking account or settings
+  void _onBottomItemSelected(String page) {
+    setState(() {
+      _currentPage = page;
     });
   }
 
@@ -56,11 +65,83 @@ class _MainNavigationState extends State<MainNavigation> {
         children: [
           // LEFT SIDE: Navigation Rail (Sidebar)
           NavigationRail(
-            selectedIndex: _selectedIndex,  // Which item is highlighted
-            onDestinationSelected: _onDestinationSelected,  // What happens on click
-            labelType: NavigationRailLabelType.all,  // Show labels always
+            selectedIndex: _selectedIndex,  // which item is highlighted
+            onDestinationSelected: _onDestinationSelected,  // what happens on click
+            labelType: NavigationRailLabelType.all,  // show labels always
+            // account and settings buttons at bottom
+            leading: null,
+            trailing: Expanded(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // my profile button
+                      InkWell(
+                        onTap: () => _onBottomItemSelected('account'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: _currentPage == 'account' ? Colors.blue.withOpacity(0.1) : null,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.account_circle,
+                                color: _currentPage == 'account' ? Colors.blue : Colors.grey[700],
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'My Profile',
+                                style: TextStyle(
+                                  color: _currentPage == 'account' ? Colors.blue : Colors.grey[700],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // settings button
+                      InkWell(
+                        onTap: () => _onBottomItemSelected('settings'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                          decoration: BoxDecoration(
+                            color: _currentPage == 'settings' ? Colors.blue.withOpacity(0.1) : null,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.settings,
+                                color: _currentPage == 'settings' ? Colors.blue : Colors.grey[700],
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Settings',
+                                style: TextStyle(
+                                  color: _currentPage == 'settings' ? Colors.blue : Colors.grey[700],
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
             destinations: const [
-              // Each NavigationRailDestination is a menu item
+              // main menu items at top
               NavigationRailDestination(
                 icon: Icon(Icons.dashboard),
                 label: Text('Dashboard'),
@@ -82,8 +163,8 @@ class _MainNavigationState extends State<MainNavigation> {
                 label: Text('Routeplanner'),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.person),
-                label: Text('Profile'),
+                icon: Icon(Icons.event_available),
+                label: Text('Organise'),
               ),
             ],
           ),
@@ -93,16 +174,24 @@ class _MainNavigationState extends State<MainNavigation> {
           
           // RIGHT SIDE: Main content area
           Expanded(
-            child: _buildPage(_selectedIndex),  // Show different page based on selection
+            child: _buildPage(),  // shows page based on selection
           ),
         ],
       ),
     );
   }
 
-  // This function returns the correct page widget based on selected index
-  Widget _buildPage(int index) {
-    switch (index) {
+  // shows correct page based on what u clicked
+  Widget _buildPage() {
+    // check if account or settings is selected
+    if (_currentPage == 'account') {
+      return const AccountPage();
+    } else if (_currentPage == 'settings') {
+      return const SettingsPage();
+    }
+    
+    // otherwise show main pages
+    switch (_selectedIndex) {
       case 0:
         return const DashboardPage();
       case 1:
@@ -114,7 +203,7 @@ class _MainNavigationState extends State<MainNavigation> {
       case 4:
         return const RouteplannerPage();
       case 5:
-        return const ProfilePage();
+        return const OrganisePage();
       default:
         return const DashboardPage();
     }
@@ -211,29 +300,85 @@ class RouteplannerPage extends StatelessWidget {
   }
 }
 
-// Profile page
-class ProfilePage extends StatelessWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+// organise page - for organising events/matches
+class OrganisePage extends StatelessWidget {
+  const OrganisePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Profile'),
+        title: const Text('Organise Event'),
         backgroundColor: Colors.blue,
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: const [
-            Icon(Icons.person, size: 100, color: Colors.blue),
+            Icon(Icons.event_available, size: 100, color: Colors.blue),
             SizedBox(height: 20),
             Text(
-              'My Profile',
+              'Organise Events/Matches',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
-            Text('Your profile information will appear here'),
+            Text('create and organise your events here'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// account page - user info and stuff
+class AccountPage extends StatelessWidget {
+  const AccountPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('My Profile'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.account_circle, size: 100, color: Colors.blue),
+            SizedBox(height: 20),
+            Text(
+              'Your account details will show here',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// settings page
+class SettingsPage extends StatelessWidget {
+  const SettingsPage({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Settings'),
+        backgroundColor: Colors.blue,
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.settings, size: 100, color: Colors.blue),
+            SizedBox(height: 20),
+            Text(
+              'Settings will show here',
+              style: TextStyle(fontSize: 18, color: Colors.grey),
+            ),
           ],
         ),
       ),

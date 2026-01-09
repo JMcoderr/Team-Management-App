@@ -2,19 +2,19 @@ import '../models/event.dart';
 import '../services/api_service.dart';
 import '../services/mock_data.dart';
 
-// Repository to manage event data
+// managing event data
 class EventRepository {
   final ApiService _apiService;
 
-  // Cache events to avoid unnecessary API calls
+  // cache to avoid spamming api
   List<Event>? _cachedEvents;
   DateTime? _lastFetchTime;
 
   EventRepository(this._apiService);
 
-  // Fetch all events from API
+  // getting all events
   Future<List<Event>> getEvents({bool forceRefresh = false}) async {
-    // Return cached data if it's less than 5 minutes old
+    // use cache if fresh
     if (!forceRefresh && 
         _cachedEvents != null && 
         _lastFetchTime != null &&

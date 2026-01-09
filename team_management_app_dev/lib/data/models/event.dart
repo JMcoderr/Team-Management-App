@@ -1,4 +1,4 @@
-// Event model class
+// event model
 class Event {
   final int id;
   final String title;
@@ -20,7 +20,7 @@ class Event {
     this.iconType = 'event',
   });
 
-  // Convert JSON from API to Event object
+  // json to event object
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
       id: json['id'] ?? 0,
@@ -36,7 +36,7 @@ class Event {
     );
   }
 
-  // Convert Event object to JSON for API
+  // event to json for api
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -62,7 +62,7 @@ class Event {
     }
   }
 
-  // Determine if event is upcoming or past
+  // check if event is upcoming or past
   static String _determineType(String? dateString) {
     if (dateString == null) return 'upcoming';
     try {
@@ -73,7 +73,7 @@ class Event {
     }
   }
 
-  // Determine icon type based on title keywords
+  // getting icon based on title
   static String _determineIconType(String title) {
     final lowerTitle = title.toLowerCase();
     
@@ -111,7 +111,7 @@ class Event {
     );
   }
 
-  // For debugging - print event in readable format
+  // for debugging
   @override
   String toString() {
     return 'Event{id: $id, title: $title, date: $date, location: $location}';

@@ -3,36 +3,36 @@ import '../data/models/event.dart';
 import '../data/repositories/event_repository.dart';
 import '../data/services/api_service.dart';
 
-// Provider for API service (singleton)
+// api service provider
 final apiServiceProvider = Provider<ApiService>((ref) {
   return ApiService();
 });
 
-// Provider for event repository
+// event repository provider
 final eventRepositoryProvider = Provider<EventRepository>((ref) {
   final apiService = ref.watch(apiServiceProvider);
   return EventRepository(apiService);
 });
 
-// Provider for all events
+// all events provider
 final eventsProvider = FutureProvider<List<Event>>((ref) async {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.getEvents();
 });
 
-// Provider for upcoming events only
+// upcoming events provider
 final upcomingEventsProvider = FutureProvider<List<Event>>((ref) async {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.getUpcomingEvents();
 });
 
-// Provider for past events only
+// past events provider
 final pastEventsProvider = FutureProvider<List<Event>>((ref) async {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.getPastEvents();
 });
 
-// State provider for search query
+// search query provider
 final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(() {
   return SearchQueryNotifier();
 });
@@ -44,7 +44,7 @@ class SearchQueryNotifier extends Notifier<String> {
   void update(String query) => state = query;
 }
 
-// State provider for selected filter tab
+// filter tab provider
 final selectedFilterProvider = NotifierProvider<SelectedFilterNotifier, int>(() {
   return SelectedFilterNotifier();
 });
@@ -56,7 +56,7 @@ class SelectedFilterNotifier extends Notifier<int> {
   void update(int index) => state = index;
 }
 
-// Provider for filtered events (combines search + filter)
+// filtered events provider
 final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
   final eventsAsync = ref.watch(eventsProvider);
   final searchQuery = ref.watch(searchQueryProvider);

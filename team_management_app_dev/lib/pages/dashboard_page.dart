@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/stats_card.dart';  // Import the StatsCard we just created
+import '../widgets/stats_card.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({Key? key}) : super(key: key);
@@ -12,12 +12,11 @@ class DashboardPage extends StatelessWidget {
         backgroundColor: Colors.blue,
       ),
       body: SingleChildScrollView(
-        // SingleChildScrollView = allows scrolling if content is too big
-        padding: const EdgeInsets.all(16.0),  // Padding around everything
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // GREETING
+            // greeting text
             const Text(
               'Welcome Back!',
               style: TextStyle(
@@ -36,7 +35,7 @@ class DashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            // Stats section
+            // stats
             const Text(
               'Quick Stats',
               style: TextStyle(
@@ -46,35 +45,33 @@ class DashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Stats card in row
+            // grid with stats cards
             GridView.count(
-              // GridView.count creates a grid layout
-              // crossAxisCount = number of columns
               crossAxisCount: 4,
-              crossAxisSpacing: 16,  // Space between columns
-              mainAxisSpacing: 16,   // Space between rows
-              shrinkWrap: true,      // Don't take full height
-              physics: const NeverScrollableScrollPhysics(),  // Don't scroll within grid
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
               children: [
-                // Card 1: Teams
+                // teams stat
                 StatsCard(
                   title: 'Teams',
                   value: '5',
                   icon: Icons.group,
                 ),
-                // Card 2: Events
+                // events stat
                 StatsCard(
                   title: 'Events',
                   value: '12',
                   icon: Icons.calendar_today,
                 ),
-                // Card 3: Upcoming
+                // this week stat
                 StatsCard(
                   title: 'This Week',
                   value: '3',
                   icon: Icons.event_note,
                 ),
-                // Card 4: Members
+                // members stat
                 StatsCard(
                   title: 'Members',
                   value: '24',
@@ -94,7 +91,7 @@ class DashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // Event list
+            // upcoming events
             _buildEventItem(
               title: 'Team DEVSquad vs Team RedOpps',
               date: '06/10/2025',
@@ -118,24 +115,22 @@ class DashboardPage extends StatelessWidget {
     );
   }
 
-  // Helper function to build an event item
+  // building event item
   Widget _buildEventItem({
     required String title,
     required String date,
     required String location,
   }) {
     return Container(
-      // Container = a box to hold things
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        // BoxDecoration = styling for the container
-        color: Colors.grey[100],  // Light grey background
-        borderRadius: BorderRadius.circular(8),  // Rounded corners
-        border: Border.all(color: Colors.grey[300]!),  // Grey border
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey[300]!),
       ),
       child: Row(
         children: [
-          // Left side: Icon
+          // icon
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -150,7 +145,7 @@ class DashboardPage extends StatelessWidget {
           ),
           const SizedBox(width: 16),
 
-          // Right side: Event details
+          // event details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
