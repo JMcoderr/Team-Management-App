@@ -128,7 +128,7 @@ class EventRepository {
     }
   }
 
-  // ==================== FILTER METHODS ====================
+  //FILTER METHODS
   /// Get only upcoming events
   Future<List<Event>> getUpcomingEvents() async {
     final allEvents = await getEvents();

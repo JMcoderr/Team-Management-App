@@ -36,7 +36,7 @@ class DashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            // STATS SECTION - Quick Overview
+            // Stats section
             const Text(
               'Quick Stats',
               style: TextStyle(
@@ -46,7 +46,7 @@ class DashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // STATS CARDS IN A GRID (4 cards per row)
+            // Stats card in row
             GridView.count(
               // GridView.count creates a grid layout
               // crossAxisCount = number of columns
@@ -84,7 +84,7 @@ class DashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 32),
 
-            // UPCOMING EVENTS SECTION
+            // Upcoming events section
             const Text(
               'Upcoming Events',
               style: TextStyle(
@@ -94,7 +94,7 @@ class DashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // EVENT LIST
+            // Event list
             _buildEventItem(
               title: 'Team DEVSquad vs Team RedOpps',
               date: '06/10/2025',
@@ -119,7 +119,6 @@ class DashboardPage extends StatelessWidget {
   }
 
   // Helper function to build an event item
-  // This keeps code clean by reusing the same layout for all events
   Widget _buildEventItem({
     required String title,
     required String date,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/events_page.dart';
+import 'pages/rosters_page.dart';
 
 void main() {
   runApp(
@@ -37,7 +38,6 @@ class MainNavigation extends StatefulWidget {
 }
 
 class _MainNavigationState extends State<MainNavigation> {
-  // STATE: This remembers which page we're on (0-5)
   // 0 = Dashboard, 1 = Teams, 2 = Events, 3 = Roosters, 4 = Routeplanner, 5 = Profile
   int _selectedIndex = 0;
 
@@ -110,7 +110,7 @@ class _MainNavigationState extends State<MainNavigation> {
       case 2:
         return const EventsPage();
       case 3:
-        return const RoostersPage();
+        return const RostersPage();
       case 4:
         return const RouteplannerPage();
       case 5:
@@ -121,7 +121,7 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 }
 
-// TEAMS PAGE (Placeholder)
+// Teams page
 class TeamsPage extends StatelessWidget {
   const TeamsPage({Key? key}) : super(key: key);
 
@@ -151,7 +151,7 @@ class TeamsPage extends StatelessWidget {
   }
 }
 
-// ROOSTERS PAGE (Placeholder)
+// Rosters page
 class RoostersPage extends StatelessWidget {
   const RoostersPage({Key? key}) : super(key: key);
 
@@ -181,7 +181,7 @@ class RoostersPage extends StatelessWidget {
   }
 }
 
-// ROUTEPLANNER PAGE (Placeholder)
+// Routeplanner page
 class RouteplannerPage extends StatelessWidget {
   const RouteplannerPage({Key? key}) : super(key: key);
 
@@ -211,7 +211,7 @@ class RouteplannerPage extends StatelessWidget {
   }
 }
 
-// PROFILE PAGE (Placeholder)
+// Profile page
 class ProfilePage extends StatelessWidget {
   const ProfilePage({Key? key}) : super(key: key);
 

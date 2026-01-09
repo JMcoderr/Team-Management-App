@@ -49,7 +49,7 @@ class Event {
     };
   }
 
-  // ==================== HELPER METHODS ====================
+  // HELPER METHODS
   
   // Helper: extract time from date string
   static String _extractTime(String? dateString) {

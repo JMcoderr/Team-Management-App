@@ -28,8 +28,6 @@ class EventCard extends StatelessWidget {
       child: InkWell(
         // InkWell = makes the card clickable with ripple effect
         onTap: () {
-          // TODO: Navigate to event details page
-          // For now, just show a message
           // Clear any existing snackbar first (instant dismiss)
           ScaffoldMessenger.of(context).clearSnackBars();
           // Show new snackbar with 1 second duration

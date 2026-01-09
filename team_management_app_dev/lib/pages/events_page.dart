@@ -22,7 +22,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
       ),
       body: Column(
         children: [
-          // SEARCH BAR
+          // Search bar
           Container(
             padding: const EdgeInsets.all(16),
             color: Colors.grey[100],
@@ -45,7 +45,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             ),
           ),
 
-          // FILTER TABS (All, Upcoming, Past)
+          // Filter tabs (all, upcoming, past)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
@@ -59,7 +59,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             ),
           ),
 
-          // EVENT LIST
+          // Event list
           Expanded(
             child: _buildEventList(),
           ),
@@ -68,7 +68,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
 
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Open add event form
+          //Open add event form
           ScaffoldMessenger.of(context).clearSnackBars();
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -154,7 +154,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         ),
       ),
 
-      // Success state - show events
+      // Success state 
       data: (events) {
         // Show empty state if no events match
         if (events.isEmpty) {
