@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../widgets/event_card.dart';
+import 'package:intl/intl.dart';
 import '../providers/event_provider.dart';
 
-// showing YOUR schedule (events from teams you're in)
+// showing your schedule as a week planner
 class SchedulePage extends ConsumerStatefulWidget {
   const SchedulePage({Key? key}) : super(key: key);
 
@@ -13,6 +13,7 @@ class SchedulePage extends ConsumerStatefulWidget {
 
 class _SchedulePageState extends ConsumerState<SchedulePage> {
   String? selectedTeam; // which team is selected in dropdown (null = all teams)
+  DateTime selectedWeek = DateTime.now(); // current week we're viewing
 
   @override
   Widget build(BuildContext context) {
@@ -82,111 +83,194 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
             ),
           ),
 
-          // event list for your teams
+          // week navigation
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.chevron_left),
+                  onPressed: () {
+                    setState(() {
+                      selectedWeek = selectedWeek.subtract(const Duration(days: 7));
+                    });
+                  },
+                ),
+                Text(
+                  _getWeekRange(),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.chevron_right),
+                  onPressed: () {
+                    setState(() {
+                      selectedWeek = selectedWeek.add(const Duration(days: 7));
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          // weekly planner view
           Expanded(
-            child: _buildEventList(),
+            child: _buildWeeklyPlanner(),
           ),
         ],
       ),
     );
   }
 
-  // showing YOUR events (from teams you're in)
-  Widget _buildEventList() {
-    // get all events first
+  // getting week range text
+  String _getWeekRange() {
+    final startOfWeek = _getStartOfWeek(selectedWeek);
+    final endOfWeek = startOfWeek.add(const Duration(days: 6));
+    return '${DateFormat('d MMM').format(startOfWeek)} - ${DateFormat('d MMM').format(endOfWeek)}';
+  }
+
+  // getting start of week (monday)
+  DateTime _getStartOfWeek(DateTime date) {
+    final daysFromMonday = date.weekday - 1;
+    return date.subtract(Duration(days: daysFromMonday));
+  }
+
+  // building weekly planner view
+  Widget _buildWeeklyPlanner() {
     final eventsData = ref.watch(eventsProvider);
 
     return eventsData.when(
-      // when loading
       loading: () => const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Loading your schedule...'),
-          ],
-        ),
+        child: CircularProgressIndicator(),
       ),
-
-      // if error happens
       error: (error, stack) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
-            Text(
-              'Something went wrong...',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error.toString(),
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-              textAlign: TextAlign.center,
-            ),
+            Text('Something went wrong...', style: TextStyle(color: Colors.grey[600])),
             const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                // try again
-                ref.invalidate(eventsProvider);
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
+            ElevatedButton(
+              onPressed: () => ref.invalidate(eventsProvider),
+              child: const Text('Try Again'),
             ),
           ],
         ),
       ),
-
-      // when we got the data
       data: (events) {
-        // filter events by selected team if any
+        // filter by team
         final filteredEvents = selectedTeam == null
-            ? events // show all events
-            : events.where((event) {
-                // TODO: when jay adds team data to events, filter properly
-                // for now just showing all events
-                return true;
-              }).toList();
+            ? events
+            : events.where((event) => true).toList(); // TODO: filter by team when available
 
-        // if no events
-        if (filteredEvents.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-                const SizedBox(height: 16),
-                Text(
-                  'No events found',
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  selectedTeam == null
-                      ? 'No events scheduled yet'
-                      : 'No events for this team',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                ),
-              ],
-            ),
-          );
-        }
+        // group events by day of week
+        final startOfWeek = _getStartOfWeek(selectedWeek);
+        final weekDays = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
 
-        // showing events in a list
         return RefreshIndicator(
           onRefresh: () async {
-            // refresh when pulled down
             ref.invalidate(eventsProvider);
           },
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            itemCount: filteredEvents.length,
+            padding: const EdgeInsets.all(16),
+            itemCount: weekDays.length,
             itemBuilder: (context, i) {
-              final event = filteredEvents[i];
-              
-              // picking icon based on type
+              final day = weekDays[i];
+              final dayEvents = filteredEvents.where((event) {
+                return event.date.year == day.year &&
+                    event.date.month == day.month &&
+                    event.date.day == day.day;
+              }).toList();
+
+              return _buildDaySection(day, dayEvents);
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  // building each day section
+  Widget _buildDaySection(DateTime day, List events) {
+    final isToday = DateTime.now().day == day.day &&
+        DateTime.now().month == day.month &&
+        DateTime.now().year == day.year;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isToday ? Colors.blue : Colors.grey[300]!,
+          width: isToday ? 2 : 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // day header
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isToday ? Colors.blue.withOpacity(0.1) : Colors.grey[50],
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Text(
+                  DateFormat('EEEE').format(day), // day name
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isToday ? Colors.blue : Colors.black87,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  DateFormat('d MMM').format(day), // date
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const Spacer(),
+                if (events.isNotEmpty)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      '${events.length}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          // events for this day
+          if (events.isEmpty)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(
+                'No events',
+                style: TextStyle(color: Colors.grey[500], fontSize: 14),
+              ),
+            )
+          else
+            ...events.map((event) {
+              // picking icon
               IconData icon;
               if (event.iconType == 'match') {
                 icon = Icons.sports_soccer;
@@ -197,19 +281,69 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
               } else {
                 icon = Icons.event;
               }
-              
-              return EventCard(
-                title: event.title,
-                date: '${event.date.day}/${event.date.month}/${event.date.year}',
-                location: event.location,
-                time: event.time,
-                icon: icon,
-                iconColor: Colors.blue, // all blue icons
+
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[50],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.grey[200]!),
+                ),
+                child: Row(
+                  children: [
+                    // icon
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(icon, color: Colors.white, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    // event info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            event.title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                              const SizedBox(width: 4),
+                              Text(
+                                event.time,
+                                style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                              ),
+                              const SizedBox(width: 12),
+                              Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                              const SizedBox(width: 4),
+                              Expanded(
+                                child: Text(
+                                  event.location,
+                                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               );
-            },
-          ),
-        );
-      },
+            }).toList(),
+        ],
+      ),
     );
   }
 }
