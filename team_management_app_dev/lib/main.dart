@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/events_page.dart';
 import 'pages/schedule_page.dart';
+import 'pages/organise_page.dart';
 
 void main() {
   runApp(
@@ -293,36 +294,6 @@ class RouteplannerPage extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text('Plan your routes here'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// organise page - for organising events/matches
-class OrganisePage extends StatelessWidget {
-  const OrganisePage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Organise Event'),
-        backgroundColor: Colors.blue,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.event_available, size: 100, color: Colors.blue),
-            SizedBox(height: 20),
-            Text(
-              'Organise Events/Matches',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text('create and organise your events here'),
           ],
         ),
       ),
