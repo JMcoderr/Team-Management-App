@@ -195,6 +195,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                 location: event.location,
                 icon: _getIconForType(event.iconType),
                 iconColor: event.type == 'upcoming' ? Colors.blue : Colors.grey,
+                onTap: () => _showEventDetails(event),
               );
             },
           ),
@@ -214,6 +215,368 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         return Icons.sports_soccer;
       default:
         return Icons.event_note;
+    }
+  }
+
+  // showing event details when clicked
+  void _showEventDetails(event) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(_getIconForType(event.iconType), color: Colors.blue),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                event.title,
+                style: const TextStyle(fontSize: 20),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // date
+            Row(
+              children: [
+                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text('${event.date.day}/${event.date.month}/${event.date.year}'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // time
+            Row(
+              children: [
+                const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                const SizedBox(width: 8),
+                Text(event.time),
+              ],
+            ),
+            const SizedBox(height: 8),
+            // location
+            Row(
+              children: [
+                const Icon(Icons.location_on, size: 16, color: Colors.grey),
+                const SizedBox(width: 8),
+                Expanded(child: Text(event.location)),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // description
+            if (event.description.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[100],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(event.description),
+              ),
+          ],
+        ),
+        actions: [
+          // delete button
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _confirmDelete(event);
+            },
+            icon: const Icon(Icons.delete, color: Colors.red),
+            label: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+          // edit button
+          TextButton.icon(
+            onPressed: () {
+              Navigator.pop(context);
+              _editEvent(event);
+            },
+            icon: const Icon(Icons.edit),
+            label: const Text('Edit'),
+          ),
+          // close button
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // confirming delete
+  void _confirmDelete(event) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Event?'),
+        content: Text('Are you sure you want to delete "${event.title}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await _deleteEvent(event);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // deleting event
+  Future<void> _deleteEvent(event) async {
+    try {
+      final repository = ref.read(eventRepositoryProvider);
+      await repository.deleteEvent(event.id);
+      
+      // refresh list
+      ref.invalidate(eventsProvider);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Event deleted! (Local mode - login needed to sync)'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  // opening edit dialog
+  void _editEvent(event) {
+    showDialog(
+      context: context,
+      builder: (context) => _EditEventDialog(event: event),
+    );
+  }
+}
+
+// edit event dialog
+class _EditEventDialog extends ConsumerStatefulWidget {
+  final dynamic event;
+  
+  const _EditEventDialog({required this.event});
+
+  @override
+  ConsumerState<_EditEventDialog> createState() => _EditEventDialogState();
+}
+
+class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
+  late TextEditingController titleController;
+  late TextEditingController locationController;
+  late TextEditingController descriptionController;
+  late DateTime selectedDate;
+  late TimeOfDay selectedTime;
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // pre-fill with existing data
+    titleController = TextEditingController(text: widget.event.title);
+    locationController = TextEditingController(text: widget.event.location);
+    descriptionController = TextEditingController(text: widget.event.description);
+    selectedDate = widget.event.date;
+    selectedTime = TimeOfDay(
+      hour: widget.event.date.hour,
+      minute: widget.event.date.minute,
+    );
+  }
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    locationController.dispose();
+    descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Edit Event'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // title
+            TextField(
+              controller: titleController,
+              decoration: const InputDecoration(
+                labelText: 'Title',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // date picker
+            InkWell(
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: selectedDate,
+                  firstDate: DateTime.now(),
+                  lastDate: DateTime.now().add(const Duration(days: 365)),
+                );
+                if (picked != null) {
+                  setState(() => selectedDate = picked);
+                }
+              },
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Date',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.calendar_today),
+                ),
+                child: Text('${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // time picker
+            InkWell(
+              onTap: () async {
+                final picked = await showTimePicker(
+                  context: context,
+                  initialTime: selectedTime,
+                );
+                if (picked != null) {
+                  setState(() => selectedTime = picked);
+                }
+              },
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Time',
+                  border: OutlineInputBorder(),
+                  prefixIcon: Icon(Icons.access_time),
+                ),
+                child: Text(selectedTime.format(context)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // location
+            TextField(
+              controller: locationController,
+              decoration: const InputDecoration(
+                labelText: 'Location',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.location_on),
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            // description
+            TextField(
+              controller: descriptionController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Description',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: isLoading ? null : () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: isLoading ? null : _saveChanges,
+          child: isLoading
+              ? const SizedBox(
+                  height: 16,
+                  width: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Text('Save'),
+        ),
+      ],
+    );
+  }
+
+  // saving changes
+  Future<void> _saveChanges() async {
+    if (titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Title required')),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      final repository = ref.read(eventRepositoryProvider);
+      
+      // combine date and time
+      final eventDateTime = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        selectedTime.hour,
+        selectedTime.minute,
+      );
+      
+      // create updated event
+      final updatedEvent = widget.event.copyWith(
+        title: titleController.text.trim(),
+        description: descriptionController.text.trim(),
+        date: eventDateTime,
+        time: selectedTime.format(context),
+        location: locationController.text.trim(),
+        type: eventDateTime.isAfter(DateTime.now()) ? 'upcoming' : 'past',
+      );
+      
+      await repository.updateEvent(widget.event.id, updatedEvent);
+      
+      // refresh
+      ref.invalidate(eventsProvider);
+      
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Event updated! (Local mode - login needed to sync)'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => isLoading = false);
     }
   }
 }

@@ -8,6 +8,7 @@ class EventCard extends StatelessWidget {
   final String location;
   final IconData icon;
   final Color iconColor;
+  final VoidCallback? onTap; // optional tap handler
 
   const EventCard({
     Key? key,
@@ -17,6 +18,7 @@ class EventCard extends StatelessWidget {
     required this.location,
     required this.icon,
     this.iconColor = Colors.blue,  // Default color is blue
+    this.onTap,
   }) : super(key: key);
 
   @override
@@ -27,17 +29,7 @@ class EventCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),  // Space between cards
       child: InkWell(
         // InkWell = makes the card clickable with ripple effect
-        onTap: () {
-          // Clear any existing snackbar first (instant dismiss)
-          ScaffoldMessenger.of(context).clearSnackBars();
-          // Show new snackbar with 1 second duration
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Clicked: $title'),
-              duration: const Duration(seconds: 1),
-            ),
-          );
-        },
+        onTap: onTap,
         borderRadius: BorderRadius.circular(4),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
