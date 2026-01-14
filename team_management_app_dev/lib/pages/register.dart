@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:team_management_app_dev/services/auth_service.dart';
-import '../main.dart';
-import 'register.dart';
+import 'login.dart';
 
-class Login extends StatefulWidget {
-  const Login({super.key});
+class Register extends StatefulWidget {
+  const Register({super.key});
 
   @override
-  State<Login> createState() => _LoginState();
+  State<Register> createState() => _RegisterState();
 }
 
-class _LoginState extends State<Login> {
+class _RegisterState extends State<Register> {
   final AuthService authService = AuthService();
 
   final TextEditingController nameController = TextEditingController();
@@ -18,35 +17,35 @@ class _LoginState extends State<Login> {
 
   bool isLoading = false;
 
-  Future<void> onLoginPressed() async {
-    setState(() {
-      isLoading = true;
-    });
+  Future<void> onRegisterPressed() async {
+  setState(() => isLoading = true);
 
-    try {
-      final token = await authService.login(
-        nameController.text,
-        passwordController.text,
-      );
+  try {
+    await authService.register(
+      nameController.text,
+      passwordController.text,
+    );
 
-      print('Logged in: $token');
+    print('Registered successfully');
 
-      // Navigate to dashboard
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainNavigation()),
-        );
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const Login()),
+    );
 
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed')),
-      );
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Register failed: ${e.toString().replaceAll('Exception: ', '')}',
+        ),
+      ),
+    );
+  } finally {
+    setState(() => isLoading = false);
   }
+}
+
 
   @override
   void dispose() {
@@ -59,7 +58,7 @@ class _LoginState extends State<Login> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login'),
+        title: const Text('Register'),
         backgroundColor: Colors.blue,
       ),
       body: Padding(
@@ -83,19 +82,19 @@ class _LoginState extends State<Login> {
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: isLoading ? null : onLoginPressed,
+              onPressed: isLoading ? null : onRegisterPressed,
               child: isLoading
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text('Login'),
+                  : const Text('Register'),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const Register()),
+                  MaterialPageRoute(builder: (context) => const Login()),
                 );
               },
-              child: const Text('Don\'t have an account? Register'),
+              child: const Text('Already have an account? Login'),
             ),
           ],
         ),
@@ -103,5 +102,3 @@ class _LoginState extends State<Login> {
     );
   }
 }
-
-
