@@ -15,10 +15,6 @@ class TeamsService {
       },
     );
 
-    print('STATUS: ${response.statusCode}');
-    print('BODY: ${response.body}');
-    print('TOKEN: $token');
-
     if (response.statusCode == 200) {
       final Map<String, dynamic> body = jsonDecode(response.body);
 

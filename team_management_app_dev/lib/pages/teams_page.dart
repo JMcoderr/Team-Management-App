@@ -83,8 +83,8 @@ class TeamsPage extends StatelessWidget {
                   final teams = snapshot.data!;
 
                   if (teams.isEmpty) {
-                    return const Center(
-                      child: Text('You are not part of any teams.'),
+                    return Center(
+                      child: Text('You are not part of any teams. Mr. $loggedInUserId'),
                     );
                   }
 

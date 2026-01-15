@@ -6,6 +6,7 @@ import 'pages/schedule_page.dart';
 import 'pages/login.dart';
 import 'pages/organise_page.dart';
 import 'pages/routeplanner_page.dart';
+import 'pages/teams_page.dart';
 
 void main() {
   runApp(
@@ -214,34 +215,34 @@ class _MainNavigationState extends State<MainNavigation> {
 }
 
 // Teams page
-class TeamsPage extends StatelessWidget {
-  const TeamsPage({Key? key}) : super(key: key);
+// class TeamsPage extends StatelessWidget {
+//   const TeamsPage({Key? key}) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Teams'),
-        backgroundColor: Colors.blue,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.group, size: 100, color: Colors.blue),
-            SizedBox(height: 20),
-            Text(
-              'Teams Page',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text('Your teams will appear here'),
-          ],
-        ),
-      ),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Teams'),
+//         backgroundColor: Colors.blue,
+//       ),
+//       body: Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: const [
+//             Icon(Icons.group, size: 100, color: Colors.blue),
+//             SizedBox(height: 20),
+//             Text(
+//               'Teams Page',
+//               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+//             ),
+//             SizedBox(height: 10),
+//             Text('Your teams will appear here'),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 // Rosters page
 class RoostersPage extends StatelessWidget {

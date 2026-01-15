@@ -24,12 +24,10 @@ class _LoginState extends State<Login> {
     });
 
     try {
-      final token = await authService.login(
+      await authService.login(
         nameController.text,
         passwordController.text,
       );
-
-      print('Logged in: $token');
 
       // Navigate to dashboard
           Navigator.pushReplacement(
