@@ -1,7 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:team_management_app_dev/data/services/teams_service.dart';
 import 'package:team_management_app_dev/data/models/team.dart';
 import 'package:team_management_app_dev/data/services/auth_service.dart';
+import 'create_team_page.dart';
 
 class TeamsPage extends StatelessWidget {
   const TeamsPage({super.key});
@@ -14,9 +17,8 @@ class TeamsPage extends StatelessWidget {
     final loggedInUserId = auth.userId;
 
 
-    // Single future for both list and optional debug box
-    final Future<List<Team>> teamsFuture =
-        teamsService.fetchTeams(token).then((teams) {
+    // Fetch all teams
+    final Future<List<Team>> teamsFuture = teamsService.fetchTeams(token).then((teams) {
       // Filter teams where user is owner or a member
       return teams
           .where((team) =>
@@ -82,12 +84,14 @@ class TeamsPage extends StatelessWidget {
 
                   final teams = snapshot.data!;
 
+                  // Check if no teams
                   if (teams.isEmpty) {
                     return Center(
-                      child: Text('You are not part of any teams. Mr. $loggedInUserId'),
+                      child: Text('You are not part of any teams.'),
                     );
                   }
 
+                  // Add teams to list
                   return ListView.builder(
                     itemCount: teams.length,
                     itemBuilder: (context, index) {
@@ -108,6 +112,27 @@ class TeamsPage extends StatelessWidget {
                     },
                   );
                 },
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // Create Team button
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) {
+                  return const CreateTeamPage();
+                }));
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Create New Team'),
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
             ),
 

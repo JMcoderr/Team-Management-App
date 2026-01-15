@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/team.dart';
+import 'auth_service.dart';
 
 class TeamsService {
   static const String baseUrl = 'https://team-managment-api.dendrowen.com/api/v2';
@@ -33,6 +34,28 @@ class TeamsService {
     }
 
     throw Exception('Failed to fetch teams with status ${response.statusCode}');
+  }
+
+  // Create team
+  Future<void> createTeam({required String name, required String description}) async {
+    final auth = AuthService();
+    final token = auth.token;
+    final response = await http.post(
+      Uri.parse('$baseUrl/teams'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'description': description,
+      }),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception('Failed to create team (${response.statusCode})');
+    }
   }
 }
 
