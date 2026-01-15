@@ -6,7 +6,7 @@ import 'pages/schedule_page.dart';
 import 'pages/login.dart';
 import 'pages/organise_page.dart';
 import 'pages/routeplanner_page.dart';
-import 'pages/teams_page.dart';
+import 'pages/teams/teams_page.dart';
 
 void main() {
   runApp(
