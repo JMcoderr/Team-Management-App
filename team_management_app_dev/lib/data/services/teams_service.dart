@@ -57,6 +57,28 @@ class TeamsService {
       throw Exception('Failed to create team (${response.statusCode})');
     }
   }
+
+  // Edit team
+  Future<void> editTeam({required int teamId, required String name, required String description}) async {
+    final auth = AuthService();
+    final token = auth.token;
+    final response = await http.put(
+      Uri.parse('$baseUrl/teams/$teamId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'name': name,
+        'description': description,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to edit team (${response.statusCode})');
+    }
+  }
 }
 
 

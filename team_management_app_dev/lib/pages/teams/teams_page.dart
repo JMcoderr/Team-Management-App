@@ -1,10 +1,9 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:team_management_app_dev/data/services/teams_service.dart';
 import 'package:team_management_app_dev/data/models/team.dart';
 import 'package:team_management_app_dev/data/services/auth_service.dart';
 import 'create_team_page.dart';
+import 'edit_team_page.dart';
 
 class TeamsPage extends StatelessWidget {
   const TeamsPage({super.key});
@@ -96,6 +95,8 @@ class TeamsPage extends StatelessWidget {
                     itemCount: teams.length,
                     itemBuilder: (context, index) {
                       final team = teams[index];
+
+                      final teamId = team.id.toString();
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         shape: RoundedRectangleBorder(
@@ -107,6 +108,25 @@ class TeamsPage extends StatelessWidget {
                               : Icons.group),
                           title: Text(team.name),
                           subtitle: Text('${team.membersCount} members'),
+                        
+                          trailing: ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.push(context,
+                                  MaterialPageRoute(
+                                    builder: (context) => EditTeamPage(teamId: teamId)
+                                  )
+                                );
+                              },
+                            icon: const Icon(Icons.add),
+                            label: const Text('Edit Team'),
+                            style: ElevatedButton.styleFrom(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
                         ),
                       );
                     },
