@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'pages/dashboard_page.dart';
 import 'pages/events_page.dart';
 import 'pages/schedule_page.dart';
+import 'pages/login.dart';
 import 'pages/organise_page.dart';
 import 'pages/routeplanner_page.dart';
 
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: const MainNavigation(),
+      home: const Login(),
     );
   }
 }
@@ -327,3 +328,4 @@ class SettingsPage extends StatelessWidget {
     );
   }
 }
+
