@@ -4,6 +4,7 @@ import 'pages/dashboard_page.dart';
 import 'pages/events_page.dart';
 import 'pages/schedule_page.dart';
 import 'pages/organise_page.dart';
+import 'pages/routeplanner_page.dart';
 
 void main() {
   runApp(
@@ -264,36 +265,6 @@ class RoostersPage extends StatelessWidget {
             ),
             SizedBox(height: 10),
             Text('Your schedule will appear here'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// Routeplanner page
-class RouteplannerPage extends StatelessWidget {
-  const RouteplannerPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Routeplanner'),
-        backgroundColor: Colors.blue,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.map, size: 100, color: Colors.blue),
-            SizedBox(height: 20),
-            Text(
-              'Route Planner',
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 10),
-            Text('Plan your routes here'),
           ],
         ),
       ),

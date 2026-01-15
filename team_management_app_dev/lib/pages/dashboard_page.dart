@@ -1,17 +1,42 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../widgets/stats_card.dart';
+import '../providers/event_provider.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends ConsumerWidget {
   const DashboardPage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // getting the events from provider
+    final eventsAsync = ref.watch(eventsProvider);
+    final upcomingEvents = ref.watch(upcomingEventsProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
         backgroundColor: Colors.blue,
       ),
-      body: SingleChildScrollView(
+      body: eventsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(
+          child: Text('Error: $err'),
+        ),
+        data: (allEvents) {
+          // calculating stats
+          final totalEvents = allEvents.length;
+          
+          // events this week
+          final now = DateTime.now();
+          final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+          final endOfWeek = startOfWeek.add(const Duration(days: 6));
+          final thisWeekEvents = allEvents.where((event) {
+            return event.date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+                   event.date.isBefore(endOfWeek.add(const Duration(days: 1)));
+          }).length;
+
+          return SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,25 +78,25 @@ class DashboardPage extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               children: [
-                // teams stat
+                // teams stat (still hardcoded - waiting for teams feature)
                 StatsCard(
                   title: 'Teams',
                   value: '5',
                   icon: Icons.group,
                 ),
-                // events stat
+                // events stat - now real!
                 StatsCard(
                   title: 'Events',
-                  value: '12',
+                  value: '$totalEvents',
                   icon: Icons.calendar_today,
                 ),
-                // this week stat
+                // this week stat - now real!
                 StatsCard(
                   title: 'This Week',
-                  value: '3',
+                  value: '$thisWeekEvents',
                   icon: Icons.event_note,
                 ),
-                // members stat
+                // members stat (still hardcoded - waiting for teams feature)
                 StatsCard(
                   title: 'Members',
                   value: '24',
@@ -91,26 +116,40 @@ class DashboardPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
 
-            // upcoming events
-            _buildEventItem(
-              title: 'Team DEVSquad vs Team RedOpps',
-              date: '06/10/2025',
-              location: 'Sports Hall A',
-            ),
-            const SizedBox(height: 12),
-            _buildEventItem(
-              title: 'Training Session',
-              date: '08/10/2025',
-              location: 'Practice Field',
-            ),
-            const SizedBox(height: 12),
-            _buildEventItem(
-              title: 'Team Meeting',
-              date: '10/10/2025',
-              location: 'Conference Room',
+            // showing real upcoming events now!
+            ...upcomingEvents.when(
+              loading: () => [const CircularProgressIndicator()],
+              error: (err, stack) => [Text('Error loading events: $err')],
+              data: (events) {
+                // take only first 3 upcoming events
+                final displayEvents = events.take(3).toList();
+                
+                if (displayEvents.isEmpty) {
+                  return [
+                    const Text(
+                      'No upcoming events yet. Create one in the Organise page!',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ];
+                }
+                
+                // build event items for each event
+                return displayEvents.map((event) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildEventItem(
+                      title: event.title,
+                      date: DateFormat('dd/MM/yyyy').format(event.date),
+                      location: event.location,
+                    ),
+                  );
+                }).toList();
+              },
             ),
           ],
         ),
+          );
+        },
       ),
     );
   }
