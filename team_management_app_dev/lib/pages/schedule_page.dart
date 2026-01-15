@@ -452,7 +452,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Event deleted! (Local mode - login needed to sync)'),
+            content: Text('Event deleted successfully!'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
@@ -629,7 +629,7 @@ class _EditEventDialogState extends State<_EditEventDialog> {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Event updated! (Local mode - login needed to sync)'),
+            content: Text('Event updated successfully!'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),

@@ -285,9 +285,9 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Event created! (Local mode - login needed to save permanently)'),
+            content: Text('Event created successfully!'),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 3),
+            duration: Duration(seconds: 2),
           ),
         );
         

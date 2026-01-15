@@ -6,8 +6,15 @@ class ApiService {
   
   static const String baseUrl = 'https://team-managment-api.dendrowen.com/api/v2';
 
-  // dio setup
-  ApiService() : _dio = Dio(BaseOptions(
+  // singleton pattern - same instance used everywhere
+  static final ApiService _instance = ApiService._internal();
+  
+  factory ApiService() {
+    return _instance;
+  }
+
+  // private constructor
+  ApiService._internal() : _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 10),

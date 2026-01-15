@@ -27,7 +27,13 @@ class EventRepository {
       print('🌐 Fetching events from API...');
       
       final response = await _apiService.get('/events');
-      final List<dynamic> jsonList = response.data;
+      
+      // API wraps response in {"data": [...]}
+      final responseData = response.data is Map && response.data['data'] != null
+          ? response.data['data']
+          : response.data;
+      
+      final List<dynamic> jsonList = responseData is List ? responseData : [];
       final events = jsonList.map((json) => Event.fromJson(json)).toList();
       
       _cachedEvents = events;
@@ -74,8 +80,37 @@ class EventRepository {
     try {
       print('🌐 Creating new event: ${event.title}...');
       
-      final response = await _apiService.post('/events', data: event.toJson());
-      final newEvent = Event.fromJson(response.data);
+      // API v2 requires datetimeStart, datetimeEnd, and teamId
+      final datetimeStart = event.date.toIso8601String();
+      // Default end time is 2 hours after start
+      final datetimeEnd = event.date.add(const Duration(hours: 2)).toIso8601String();
+      
+      // For now, use teamId 1 as default (TODO: let user select team)
+      final eventData = {
+        'title': event.title,
+        'description': event.description,
+        'datetimeStart': datetimeStart,
+        'datetimeEnd': datetimeEnd,
+        'location': {
+          'latitude': event.latitude ?? 0.0,  // Default to 0,0 if not provided
+          'longitude': event.longitude ?? 0.0,
+        },
+        'teamId': event.teamId ?? 1,  // Use provided teamId or default to 1
+        'metadata': {},
+      };
+      
+      print('📤 Sending data: $eventData');
+      
+      final response = await _apiService.post('/events', data: eventData);
+      
+      print('📥 Response data: ${response.data}');
+      
+      // check if response has data field (API might wrap response)
+      final responseData = response.data is Map && response.data['data'] != null 
+          ? response.data['data'] 
+          : response.data;
+      
+      final newEvent = Event.fromJson(responseData);
       
       // Clear cache so next getEvents() fetches fresh data
       _clearCache();
@@ -108,8 +143,24 @@ class EventRepository {
     try {
       print('🌐 Updating event #$id...');
       
-      final response = await _apiService.put('/events/$id', data: event.toJson());
-      final updatedEvent = Event.fromJson(response.data);
+      // only send fields that can be updated
+      final eventData = {
+        'title': event.title,
+        'description': event.description,
+        'date': event.date.toIso8601String(),
+        'location': event.location,
+      };
+      
+      final response = await _apiService.put('/events/$id', data: eventData);
+      
+      print('📥 Update response: ${response.data}');
+      
+      // check if response has data field
+      final responseData = response.data is Map && response.data['data'] != null 
+          ? response.data['data'] 
+          : response.data;
+      
+      final updatedEvent = Event.fromJson(responseData);
       
       // Clear cache
       _clearCache();

@@ -64,21 +64,6 @@ class _EventsPageState extends ConsumerState<EventsPage> {
           ),
         ],
       ),
-
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: add event form
-          ScaffoldMessenger.of(context).clearSnackBars();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Add Event - Coming Soon!'),
-              duration: Duration(seconds: 1),
-            ),
-          );
-        },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add),
-      ),
     );
   }
 
@@ -559,10 +544,10 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Event updated! (Local mode - login needed to sync)'),
+          const SnackBar(
+            content: Text('Event updated successfully!'),
             backgroundColor: Colors.green,
-            duration: const Duration(seconds: 2),
+            duration: Duration(seconds: 2),
           ),
         );
       }

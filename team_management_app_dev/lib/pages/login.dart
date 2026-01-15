@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_management_app_dev/data/services/auth_service.dart';
+import 'package:team_management_app_dev/data/services/api_service.dart';
 import '../main.dart';
 import 'register.dart';
 
@@ -31,20 +33,37 @@ class _LoginState extends State<Login> {
 
       print('Logged in: $token');
 
-      // Navigate to dashboard
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const MainNavigation()),
+      // save token to storage
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('auth_token', token);
+      
+      // set token in api service so all requests use it
+      ApiService().setAuthToken(token);
+
+      // navigate to dashboard
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MainNavigation()),
         );
+      }
 
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed')),
-      );
+      print('Login error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Login failed: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
   }
 
