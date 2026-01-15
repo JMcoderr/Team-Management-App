@@ -31,16 +31,11 @@ class ApiService {
     ));
   }
 
-  // auth token storage
-  String? _authToken;
-
   void setAuthToken(String token) {
-    _authToken = token;
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
   void clearAuthToken() {
-    _authToken = null;
     _dio.options.headers.remove('Authorization');
   }
 

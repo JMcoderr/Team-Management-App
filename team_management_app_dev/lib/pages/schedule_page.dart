@@ -23,7 +23,10 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
         title: const Text('Schedule'),
         backgroundColor: Colors.blue,
       ),
-      body: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(
         children: [
           // filter by team dropdown
           Container(
@@ -119,6 +122,8 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
             child: _buildWeeklyPlanner(),
           ),
         ],
+          ),
+        ),
       ),
     );
   }

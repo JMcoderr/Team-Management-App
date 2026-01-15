@@ -22,6 +22,17 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
   
+  // team selection (for API v2)
+  int? selectedTeamId;
+  
+  // location helper
+  String? selectedLocationPreset;
+  final List<Map<String, dynamic>> locationPresets = [
+    {'name': 'Sporthallen Zuid', 'lat': 52.3376, 'lng': 4.8682},
+    {'name': 'Sportcomplex Noord', 'lat': 52.3945, 'lng': 4.9123},
+    {'name': 'Training Ground', 'lat': 52.3702, 'lng': 4.8952},
+  ];
+  
   bool isLoading = false; // to show spinner when saving
 
   @override
@@ -40,9 +51,12 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
         title: const Text('Create Event'),
         backgroundColor: Colors.blue,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: SingleChildScrollView(
+            padding: EdgeInsets.all(MediaQuery.of(context).size.width < 600 ? 16 : 32),
+            child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // title field
@@ -60,6 +74,44 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                 ),
                 filled: true,
                 fillColor: Colors.grey[50],
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // team selection dropdown
+            const Text(
+              'Team',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey[400]!),
+                borderRadius: BorderRadius.circular(8),
+                color: Colors.grey[50],
+              ),
+              child: DropdownButton<int?>(
+                value: selectedTeamId,
+                isExpanded: true,
+                underline: Container(),
+                hint: const Text('Select a team (optional for now)'),
+                items: const [
+                  DropdownMenuItem(
+                    value: null,
+                    child: Text('No team selected'),
+                  ),
+                  DropdownMenuItem(
+                    value: 1,
+                    child: Text('Team 1 (Default)'),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedTeamId = value;
+                  });
+                },
               ),
             ),
             
@@ -124,6 +176,39 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
             ),
             
             const SizedBox(height: 20),
+            
+            // location presets
+            const Text(
+              'Quick Location',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              children: locationPresets.map((preset) {
+                final isSelected = selectedLocationPreset == preset['name'];
+                return ChoiceChip(
+                  label: Text(preset['name']),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    setState(() {
+                      if (selected) {
+                        selectedLocationPreset = preset['name'];
+                        locationController.text = preset['name'];
+                      } else {
+                        selectedLocationPreset = null;
+                      }
+                    });
+                  },
+                  selectedColor: Colors.blue,
+                  labelStyle: TextStyle(
+                    color: isSelected ? Colors.white : Colors.black87,
+                  ),
+                );
+              }).toList(),
+            ),
+            
+            const SizedBox(height: 12),
             
             // location field
             const Text(
@@ -196,6 +281,8 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
             ),
           ],
         ),
+          ),
+        ),
       ),
     );
   }
@@ -264,6 +351,20 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
         selectedTime.minute,
       );
       
+      // get location coordinates if preset was selected
+      double? lat;
+      double? lng;
+      final locationText = locationController.text.trim();
+      
+      // check if location matches a preset
+      for (var preset in locationPresets) {
+        if (preset['name'] == locationText) {
+          lat = preset['lat'];
+          lng = preset['lng'];
+          break;
+        }
+      }
+      
       // create the event object
       final newEvent = Event(
         id: DateTime.now().millisecondsSinceEpoch, // temp id
@@ -271,8 +372,11 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
         description: descriptionController.text.trim(),
         date: eventDateTime,
         time: selectedTime.format(context),
-        location: locationController.text.trim(),
+        location: locationText,
         type: eventDateTime.isAfter(DateTime.now()) ? 'upcoming' : 'past',
+        teamId: selectedTeamId ?? 1,  // Use selected team or default to 1
+        latitude: lat,
+        longitude: lng,
       );
       
       // save it
@@ -298,6 +402,8 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
         setState(() {
           selectedDate = DateTime.now();
           selectedTime = TimeOfDay.now();
+          selectedTeamId = null;
+          selectedLocationPreset = null;
         });
       }
     } catch (e) {

@@ -24,7 +24,10 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
         title: const Text('Route Planner'),
         backgroundColor: Colors.blue,
       ),
-      body: Column(
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Column(
         children: [
           // search bar
           Container(
@@ -91,6 +94,8 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
             ),
           ),
         ],
+          ),
+        ),
       ),
     );
   }
@@ -158,9 +163,21 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
                 Icon(Icons.location_on, size: 20, color: Colors.red[400]),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    event.location,
-                    style: const TextStyle(fontSize: 14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event.location,
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      ),
+                      if (event.latitude != null && event.longitude != null)
+                        const SizedBox(height: 2),
+                      if (event.latitude != null && event.longitude != null)
+                        Text(
+                          'Lat: ${event.latitude!.toStringAsFixed(4)}, Lng: ${event.longitude!.toStringAsFixed(4)}',
+                          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                        ),
+                    ],
                   ),
                 ),
               ],
@@ -215,9 +232,18 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
   }
 
   // opening google maps for location
-  Future<void> _openGoogleMaps(String location) async {
-    final encodedLocation = Uri.encodeComponent(location);
-    final url = Uri.parse('https://www.google.com/maps/search/?api=1&query=$encodedLocation');
+  Future<void> _openGoogleMaps(event) async {
+    String urlString;
+    
+    // use coordinates if available for more accurate location
+    if (event.latitude != null && event.longitude != null) {
+      urlString = 'https://www.google.com/maps/search/?api=1&query=${event.latitude},${event.longitude}';
+    } else {
+      final encodedLocation = Uri.encodeComponent(event.location);
+      urlString = 'https://www.google.com/maps/search/?api=1&query=$encodedLocation';
+    }
+    
+    final url = Uri.parse(urlString);
     
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -234,13 +260,21 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
   }
 
   // opening directions to location
-  Future<void> _openDirections(String location) async {
-    final encodedLocation = Uri.encodeComponent(location);
-    // this opens google maps with directions from current location
-    final url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$encodedLocation');
+  Future<void> _openDirections(event) async {
+    String urlString;
     
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
+    // use coordinates if available for more accurate directions
+    if (event.latitude != null && event.longitude != null) {
+      urlString = 'https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}';
+    } else {
+      final encodedLocation = Uri.encodeComponent(event.location);
+      urlString = 'https://www.google.com/maps/dir/?api=1&destination=$encodedLocation';
+    }
+    
+    final directionsUrl = Uri.parse(urlString);
+    
+    if (await canLaunchUrl(directionsUrl)) {
+      await launchUrl(directionsUrl, mode: LaunchMode.externalApplication);
     } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

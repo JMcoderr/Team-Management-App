@@ -70,39 +70,50 @@ class DashboardPage extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            // grid with stats cards
-            GridView.count(
-              crossAxisCount: 4,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                // teams stat (still hardcoded - waiting for teams feature)
-                StatsCard(
-                  title: 'Teams',
-                  value: '5',
-                  icon: Icons.group,
-                ),
-                // events stat - now real!
-                StatsCard(
-                  title: 'Events',
-                  value: '$totalEvents',
-                  icon: Icons.calendar_today,
-                ),
-                // this week stat - now real!
-                StatsCard(
-                  title: 'This Week',
-                  value: '$thisWeekEvents',
-                  icon: Icons.event_note,
-                ),
-                // members stat (still hardcoded - waiting for teams feature)
-                StatsCard(
-                  title: 'Members',
-                  value: '24',
-                  icon: Icons.people,
-                ),
-              ],
+            // grid with stats cards - responsive layout
+            LayoutBuilder(
+              builder: (context, constraints) {
+                // adaptive columns based on screen width
+                int columns = 4;
+                if (constraints.maxWidth < 1200) columns = 3;
+                if (constraints.maxWidth < 900) columns = 2;
+                if (constraints.maxWidth < 600) columns = 1;
+                
+                return GridView.count(
+                  crossAxisCount: columns,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: constraints.maxWidth < 600 ? 3 : 1.2,
+                  children: [
+                    // teams stat
+                    StatsCard(
+                      title: 'Teams',
+                      value: '0',  // Will update when teams feature is ready
+                      icon: Icons.group,
+                    ),
+                    // events stat - real data!
+                    StatsCard(
+                      title: 'Events',
+                      value: '$totalEvents',
+                      icon: Icons.calendar_today,
+                    ),
+                    // this week stat - real data!
+                    StatsCard(
+                      title: 'This Week',
+                      value: '$thisWeekEvents',
+                      icon: Icons.event_note,
+                    ),
+                    // upcoming events count
+                    StatsCard(
+                      title: 'Upcoming',
+                      value: '${allEvents.where((e) => e.type == 'upcoming').length}',
+                      icon: Icons.event_available,
+                    ),
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 32),
 
