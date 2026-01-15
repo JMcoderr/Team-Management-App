@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:team_management_app_dev/services/auth_service.dart';
+import 'package:team_management_app_dev/data/services/auth_service.dart';
 import 'login.dart';
 
 class Register extends StatefulWidget {
