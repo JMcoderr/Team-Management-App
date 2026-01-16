@@ -33,7 +33,7 @@ class StatsCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),  // Empty space
             
-            // Value (the big number)
+            // Value
             Text(
               value,
               style: const TextStyle(

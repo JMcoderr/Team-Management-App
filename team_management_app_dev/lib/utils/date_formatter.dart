@@ -3,29 +3,17 @@ import 'package:intl/intl.dart';
 // Date formatting utilities
 
 class DateFormatter {
-  // Format date with relative terms (Today, Tomorrow, Yesterday)
+  // Format date with real dates (no relative terms)
   static String formatRelativeDate(DateTime date) {
     final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final tomorrow = today.add(const Duration(days: 1));
     final dateOnly = DateTime(date.year, date.month, date.day);
     
-    if (dateOnly == today) {
-      return 'Today';
-    } else if (dateOnly == tomorrow) {
-      return 'Tomorrow';
-    } else if (dateOnly == yesterday) {
-      return 'Yesterday';
-    } else if (dateOnly.isAfter(today) && dateOnly.isBefore(today.add(const Duration(days: 7)))) {
-      // This week - show day name
-      return DateFormat('EEEE').format(date); // Monday, Tuesday, etc
-    } else if (dateOnly.year == today.year) {
-      // This year - show month and day
-      return DateFormat('MMM d').format(date); // Jan 16
+    if (dateOnly.year == now.year) {
+      // This year - show day name, month and day
+      return DateFormat('EEE, MMM d').format(date); // Thu, Jan 16
     } else {
       // Other years - show full date
-      return DateFormat('MMM d, yyyy').format(date); // Jan 16, 2026
+      return DateFormat('EEE, MMM d, yyyy').format(date); // Thu, Jan 16, 2026
     }
   }
   

@@ -364,9 +364,15 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         // filter by team if selected
         var displayEvents = events;
         if (selectedTeamFilter != null) {
+          // Find the selected team by name
+          final selectedTeam = userTeams.firstWhere(
+            (team) => team.name == selectedTeamFilter,
+            orElse: () => userTeams.first,
+          );
+          
+          // Filter events by teamId
           displayEvents = events.where((event) {
-            return event.location.contains(selectedTeamFilter!) || 
-                   event.title.contains(selectedTeamFilter!);
+            return event.teamId == selectedTeam.id;
           }).toList();
         }
 
@@ -383,6 +389,33 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             return true;
           }).toList();
         }
+        
+        // Sort events by date and time (upcoming events first, sorted by date and time)
+        displayEvents.sort((a, b) {
+          bool aIsUpcoming = a.type == 'upcoming';
+          bool bIsUpcoming = b.type == 'upcoming';
+          
+          // Upcoming events first
+          if (aIsUpcoming && !bIsUpcoming) return -1;
+          if (!aIsUpcoming && bIsUpcoming) return 1;
+          
+          // Within same type, sort by date (soonest first for upcoming)
+          if (aIsUpcoming) {
+            // Compare dates first
+            int dateComparison = a.date.compareTo(b.date);
+            if (dateComparison != 0) return dateComparison;
+            
+            // If same date, sort by time (earliest first)
+            return a.time.compareTo(b.time);
+          } else {
+            // Compare dates first
+            int dateComparison = b.date.compareTo(a.date);
+            if (dateComparison != 0) return dateComparison;
+            
+            // If same date, sort by time (latest first for past events)
+            return b.time.compareTo(a.time);
+          }
+        });
 
         // Show empty state if no events match
         if (displayEvents.isEmpty) {

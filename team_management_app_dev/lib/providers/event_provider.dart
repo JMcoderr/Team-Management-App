@@ -51,7 +51,7 @@ final selectedFilterProvider = NotifierProvider<SelectedFilterNotifier, int>(() 
 
 class SelectedFilterNotifier extends Notifier<int> {
   @override
-  int build() => 0;
+  int build() => 1;  // Default to upcoming (1 instead of 0)
   
   void update(int index) => state = index;
 }
@@ -81,7 +81,7 @@ final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
         }).toList();
       }
 
-      // sort events by date - future events first (blue), then past events (grey)
+      // sort events by date and time - future events first (blue), then past events (grey)
       filtered.sort((a, b) {
         // check if event is in future or past
         bool aIsFuture = a.type == 'upcoming';
@@ -93,9 +93,19 @@ final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
         
         // if both same type, sort by date (newest first for future, oldest first for past)
         if (aIsFuture) {
-          return a.date.compareTo(b.date); // upcoming events: soonest first
+          // Compare dates first
+          int dateComparison = a.date.compareTo(b.date);
+          if (dateComparison != 0) return dateComparison; // upcoming events: soonest first
+          
+          // If same date, sort by time (earliest first)
+          return a.time.compareTo(b.time);
         } else {
-          return b.date.compareTo(a.date); // past events: most recent first
+          // Compare dates first
+          int dateComparison = b.date.compareTo(a.date);
+          if (dateComparison != 0) return dateComparison; // past events: most recent first
+          
+          // If same date, sort by time (latest first for past events)
+          return b.time.compareTo(a.time);
         }
       });
 

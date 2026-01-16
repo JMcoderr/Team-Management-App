@@ -222,6 +222,9 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                     event.date.month == day.month &&
                     event.date.day == day.day;
               }).toList();
+              
+              // Sort events by time (earliest first)
+              dayEvents.sort((a, b) => a.time.compareTo(b.time));
 
               return _buildDaySection(day, dayEvents);
             },

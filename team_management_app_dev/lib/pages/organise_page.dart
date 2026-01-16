@@ -20,6 +20,8 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
   final titleController = TextEditingController();
   final locationController = TextEditingController();
   final descriptionController = TextEditingController();
+  final googleMapsLinkController = TextEditingController();
+  final directionsLinkController = TextEditingController();
   
   // date and time variables
   DateTime selectedDate = DateTime.now();
@@ -73,6 +75,8 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
     titleController.dispose();
     locationController.dispose();
     descriptionController.dispose();
+    googleMapsLinkController.dispose();
+    directionsLinkController.dispose();
     super.dispose();
   }
 
@@ -239,6 +243,48 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
             
             const SizedBox(height: 20),
             
+            // Google Maps place link field
+            const Text(
+              'Google Maps Place Link (Optional)',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: googleMapsLinkController,
+              decoration: InputDecoration(
+                hintText: 'e.g. https://maps.app.goo.gl/xxxxx',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
+                prefixIcon: const Icon(Icons.map),
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Google Maps directions link field
+            const Text(
+              'Google Maps Directions Link (Optional)',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: directionsLinkController,
+              decoration: InputDecoration(
+                hintText: 'e.g. https://maps.app.goo.gl/xxxxx',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                filled: true,
+                fillColor: Colors.grey[50],
+                prefixIcon: const Icon(Icons.directions),
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
             // description field
             const Text(
               'Description',
@@ -376,13 +422,20 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
         teamId: selectedTeamId ?? 1,  // Use selected team or default to 1
         latitude: lat,
         longitude: lng,
+        googleMapsLink: googleMapsLinkController.text.trim().isEmpty 
+            ? null 
+            : googleMapsLinkController.text.trim(),
+        directionsLink: directionsLinkController.text.trim().isEmpty 
+            ? null 
+            : directionsLinkController.text.trim(),
       );
       
       // save it
       await repository.createEvent(newEvent);
       
-      // refresh the events list
+      // refresh the events list and routeplanner
       ref.invalidate(eventsProvider);
+      ref.invalidate(upcomingEventsProvider);
       
       // show success message
       if (mounted) {
@@ -398,6 +451,8 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
         titleController.clear();
         locationController.clear();
         descriptionController.clear();
+        googleMapsLinkController.clear();
+        directionsLinkController.clear();
         setState(() {
           selectedDate = DateTime.now();
           selectedTime = TimeOfDay.now();

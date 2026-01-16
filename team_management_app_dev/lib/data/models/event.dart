@@ -11,6 +11,8 @@ class Event {
   final int? teamId;  // Added for API v2
   final double? latitude;  // Added for API v2 location
   final double? longitude;  // Added for API v2 location
+  final String? googleMapsLink;  // Google Maps place link
+  final String? directionsLink;  // Google Maps directions link
 
   Event({
     required this.id,
@@ -24,6 +26,8 @@ class Event {
     this.teamId,
     this.latitude,
     this.longitude,
+    this.googleMapsLink,
+    this.directionsLink,
   });
 
   // json to event object
@@ -67,6 +71,8 @@ class Event {
       teamId: json['teamId'],
       latitude: lat,
       longitude: lng,
+      googleMapsLink: json['googleMapsLink'] as String?,
+      directionsLink: json['directionsLink'] as String?,
     );
   }
 

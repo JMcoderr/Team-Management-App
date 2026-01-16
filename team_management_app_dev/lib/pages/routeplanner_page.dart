@@ -85,11 +85,26 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
                 ),
               ),
               data: (events) {
+                // Only show events with both Google Maps links
+                final eventsWithLinks = events.where((event) {
+                  return event.googleMapsLink != null && 
+                         event.googleMapsLink!.isNotEmpty &&
+                         event.directionsLink != null && 
+                         event.directionsLink!.isNotEmpty;
+                }).toList();
+                
                 // filtering by search
-                final filteredEvents = events.where((event) {
+                final filteredEvents = eventsWithLinks.where((event) {
                   return event.title.toLowerCase().contains(searchQuery) ||
                       event.location.toLowerCase().contains(searchQuery);
                 }).toList();
+                
+                // Sort by date and time (earliest first)
+                filteredEvents.sort((a, b) {
+                  int dateComparison = a.date.compareTo(b.date);
+                  if (dateComparison != 0) return dateComparison;
+                  return a.time.compareTo(b.time);
+                });
 
                 if (filteredEvents.isEmpty) {
                   return EmptyState(
@@ -201,7 +216,7 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
               // google maps button
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _openGoogleMaps(event.location),
+                  onPressed: () => _openGoogleMaps(event),
                   icon: const Icon(Icons.map, size: 18),
                   label: const Text('Google Maps'),
                   style: ElevatedButton.styleFrom(
@@ -215,7 +230,7 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
               // directions button
               Expanded(
                 child: ElevatedButton.icon(
-                  onPressed: () => _openDirections(event.location),
+                  onPressed: () => _openDirections(event),
                   icon: const Icon(Icons.directions, size: 18),
                   label: const Text('Directions'),
                   style: ElevatedButton.styleFrom(
@@ -236,8 +251,12 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
   Future<void> _openGoogleMaps(event) async {
     String urlString;
     
-    // use coordinates if available for more accurate location
-    if (event.latitude != null && event.longitude != null) {
+    // Use stored Google Maps link if available
+    if (event.googleMapsLink != null && event.googleMapsLink!.isNotEmpty) {
+      urlString = event.googleMapsLink!;
+    }
+    // Otherwise use coordinates if available for more accurate location
+    else if (event.latitude != null && event.longitude != null) {
       urlString = 'https://www.google.com/maps/search/?api=1&query=${event.latitude},${event.longitude}';
     } else {
       final encodedLocation = Uri.encodeComponent(event.location);
@@ -264,8 +283,12 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
   Future<void> _openDirections(event) async {
     String urlString;
     
-    // use coordinates if available for more accurate directions
-    if (event.latitude != null && event.longitude != null) {
+    // Use stored directions link if available
+    if (event.directionsLink != null && event.directionsLink!.isNotEmpty) {
+      urlString = event.directionsLink!;
+    }
+    // Otherwise use coordinates if available for more accurate directions
+    else if (event.latitude != null && event.longitude != null) {
       urlString = 'https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}';
     } else {
       final encodedLocation = Uri.encodeComponent(event.location);
