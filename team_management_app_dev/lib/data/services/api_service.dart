@@ -3,18 +3,11 @@ import 'package:dio/dio.dart';
 // handling http requests to backend
 class ApiService {
   final Dio _dio;
-  
+
   static const String baseUrl = 'https://team-managment-api.dendrowen.com/api/v2';
 
-  // singleton pattern - same instance used everywhere
-  static final ApiService _instance = ApiService._internal();
-  
-  factory ApiService() {
-    return _instance;
-  }
-
-  // private constructor
-  ApiService._internal() : _dio = Dio(BaseOptions(
+  // dio setup - no longer singleton to match Jay's approach
+  ApiService() : _dio = Dio(BaseOptions(
     baseUrl: baseUrl,
     connectTimeout: const Duration(seconds: 10),
     receiveTimeout: const Duration(seconds: 10),
@@ -31,11 +24,17 @@ class ApiService {
     ));
   }
 
+  // auth token storage - kept for consistency with Jay's approach
+  // ignore: unused_field
+  String? _authToken;
+
   void setAuthToken(String token) {
+    _authToken = token;
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
   void clearAuthToken() {
+    _authToken = null;
     _dio.options.headers.remove('Authorization');
   }
 

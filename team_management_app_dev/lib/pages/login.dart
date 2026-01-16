@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:team_management_app_dev/data/services/auth_service.dart';
-import 'package:team_management_app_dev/data/services/api_service.dart';
 import '../main.dart';
 import 'register.dart';
 
@@ -26,21 +24,13 @@ class _LoginState extends State<Login> {
     });
 
     try {
-      final token = await authService.login(
+      // Login stores token and userId in AuthService singleton
+      await authService.login(
         nameController.text,
         passwordController.text,
       );
 
-      print('Logged in: $token');
-
-      // save token to storage
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('auth_token', token);
-      
-      // set token in api service so all requests use it
-      ApiService().setAuthToken(token);
-
-      // navigate to dashboard
+      // Navigate to dashboard
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -49,13 +39,9 @@ class _LoginState extends State<Login> {
       }
 
     } catch (e) {
-      print('Login error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Login failed: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
+          const SnackBar(content: Text('Login failed')),
         );
       }
     } finally {
