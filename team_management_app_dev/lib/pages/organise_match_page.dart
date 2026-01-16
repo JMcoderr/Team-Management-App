@@ -8,37 +8,37 @@ import '../data/services/teams_service.dart';
 import '../data/services/auth_service.dart';
 import '../utils/constants.dart';
 
-// page for creating new events
-class OrganisePage extends ConsumerStatefulWidget {
-  const OrganisePage({Key? key}) : super(key: key);
+// page for creating matches specifically
+class OrganiseMatchPage extends ConsumerStatefulWidget {
+  const OrganiseMatchPage({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<OrganisePage> createState() => _OrganisePageState();
+  ConsumerState<OrganiseMatchPage> createState() => _OrganiseMatchPageState();
 }
 
-class _OrganisePageState extends ConsumerState<OrganisePage> {
-  // controllers for text fields (like variables that remember what user typed)
+class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
+  // controllers for text fields
   final titleController = TextEditingController();
   final locationController = TextEditingController();
   final descriptionController = TextEditingController();
   final googleMapsLinkController = TextEditingController();
   final directionsLinkController = TextEditingController();
+  final opponentController = TextEditingController();
   
-  // date and time variables
+  // date and time stuff
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
   
-  // team selection (for API v2)
+  // team selection
   int? selectedTeamId;
-  List<Team> userTeams = []; // teams where user is member
+  List<Team> userTeams = [];
   bool loadingTeams = true;
   
-  bool isLoading = false; // to show spinner when saving
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    // load teams when page opens
     _loadUserTeams();
   }
 
@@ -49,11 +49,9 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
       final token = auth.token;
       final userId = auth.userId;
       
-      // fetch all teams
       final teamsService = TeamsService();
       final allTeams = await teamsService.fetchTeams(token);
       
-      // only show teams where user is owner or member
       final filtered = allTeams.where((team) => 
         team.ownerId == userId || team.memberIds.contains(userId)
       ).toList();
@@ -72,12 +70,12 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
 
   @override
   void dispose() {
-    // cleanup when page closes 
     titleController.dispose();
     locationController.dispose();
     descriptionController.dispose();
     googleMapsLinkController.dispose();
     directionsLinkController.dispose();
+    opponentController.dispose();
     super.dispose();
   }
 
@@ -88,12 +86,12 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.event_available, color: Colors.white),
+            Icon(Icons.sports_soccer, color: Colors.white),
             const SizedBox(width: AppSpacing.sm),
-            const Text('Organise Event'),
+            const Text('Organise Match'),
           ],
         ),
-        backgroundColor: AppColors.training,
+        backgroundColor: AppColors.match,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -110,7 +108,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [AppColors.training, AppColors.training.withOpacity(0.8)],
+                      colors: [AppColors.match, AppColors.match.withOpacity(0.8)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -125,7 +123,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                         ),
-                        child: Icon(Icons.event_available, size: 32, color: Colors.white),
+                        child: Icon(Icons.sports_soccer, size: 32, color: Colors.white),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
@@ -133,7 +131,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Create an Event',
+                              'Create a Match',
                               style: AppTextStyles.h3.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -141,7 +139,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                             ),
                             const SizedBox(height: AppSpacing.xxs),
                             Text(
-                              'Schedule training sessions, meetings, or other events',
+                              'Schedule a match for your team',
                               style: AppTextStyles.body.copyWith(
                                 color: Colors.white.withOpacity(0.9),
                               ),
@@ -165,26 +163,37 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // title field
-                      _buildLabel('Event Title'),
+                      // match title
+                      _buildLabel('Match Title'),
                       TextField(
                         controller: titleController,
                         decoration: _buildInputDecoration(
-                          hint: 'e.g. Training Session',
-                          icon: Icons.event,
+                          hint: 'e.g. vs Ajax Academy',
+                          icon: Icons.sports_soccer,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+
+                      // opponent
+                      _buildLabel('Opponent Team'),
+                      TextField(
+                        controller: opponentController,
+                        decoration: _buildInputDecoration(
+                          hint: 'e.g. Ajax Academy',
+                          icon: Icons.group,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
 
                       // team dropdown
-                      _buildLabel('Team'),
+                      _buildLabel('Your Team'),
                       loadingTeams
                           ? const CircularProgressIndicator()
                           : DropdownButtonFormField<int>(
                               value: selectedTeamId,
                               decoration: _buildInputDecoration(
-                                hint: 'Select team (optional)',
-                                icon: Icons.group,
+                                hint: 'Select team',
+                                icon: Icons.group_outlined,
                               ),
                               items: userTeams.map((team) {
                                 return DropdownMenuItem(
@@ -209,7 +218,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                               children: [
                                 _buildLabel('Date'),
                                 InkWell(
-                                  onTap: () => _pickDate(context),
+                                  onTap: () => _pickDate(),
                                   child: Container(
                                     padding: const EdgeInsets.all(AppSpacing.md),
                                     decoration: BoxDecoration(
@@ -239,7 +248,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                               children: [
                                 _buildLabel('Time'),
                                 InkWell(
-                                  onTap: () => _pickTime(context),
+                                  onTap: () => _pickTime(),
                                   child: Container(
                                     padding: const EdgeInsets.all(AppSpacing.md),
                                     decoration: BoxDecoration(
@@ -304,7 +313,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                         controller: descriptionController,
                         maxLines: 3,
                         decoration: _buildInputDecoration(
-                          hint: 'Add event details, notes, etc.',
+                          hint: 'Add match details, notes, etc.',
                           icon: Icons.notes,
                         ),
                       ),
@@ -315,7 +324,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                         width: double.infinity,
                         height: 56,
                         child: ElevatedButton.icon(
-                          onPressed: isLoading ? null : _createEvent,
+                          onPressed: isLoading ? null : _createMatch,
                           icon: isLoading
                               ? const SizedBox(
                                   width: 20,
@@ -327,11 +336,11 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                                 )
                               : const Icon(Icons.add),
                           label: Text(
-                            isLoading ? 'Creating...' : 'Create Event',
+                            isLoading ? 'Creating...' : 'Create Match',
                             style: AppTextStyles.button,
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.training,
+                            backgroundColor: AppColors.match,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -387,15 +396,13 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
     );
   }
 
-  // opening date picker
-  Future<void> _pickDate(BuildContext context) async {
+  Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
       initialDate: selectedDate,
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime(2100),
     );
-    
     if (picked != null) {
       setState(() {
         selectedDate = picked;
@@ -403,13 +410,11 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
     }
   }
 
-  // opening time picker
-  Future<void> _pickTime(BuildContext context) async {
+  Future<void> _pickTime() async {
     final picked = await showTimePicker(
       context: context,
       initialTime: selectedTime,
     );
-    
     if (picked != null) {
       setState(() {
         selectedTime = picked;
@@ -417,19 +422,34 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
     }
   }
 
-  // saving the event
-  Future<void> _createEvent() async {
-    // check if title is empty
+  Future<void> _createMatch() async {
+    // validate stuff
     if (titleController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a title')),
+        SnackBar(
+          content: Text('please add a match title'),
+          backgroundColor: AppColors.error,
+        ),
       );
       return;
     }
-    
+
+    if (selectedTeamId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('please select a team'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      return;
+    }
+
     if (locationController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a location')),
+        SnackBar(
+          content: Text('please add a location'),
+          backgroundColor: AppColors.error,
+        ),
       );
       return;
     }
@@ -439,10 +459,9 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
     });
 
     try {
-      // get the repository
       final repository = ref.read(eventRepositoryProvider);
       
-      // combining date and time
+      // combine date and time
       final eventDateTime = DateTime(
         selectedDate.year,
         selectedDate.month,
@@ -450,24 +469,17 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
         selectedTime.hour,
         selectedTime.minute,
       );
-      
-      // get location coordinates if preset was selected
-      double? lat;
-      double? lng;
-      final locationText = locationController.text.trim();
-      
-      // create the event object
-      final newEvent = Event(
-        id: DateTime.now().millisecondsSinceEpoch, // temp id
+
+      final newMatch = Event(
+        id: DateTime.now().millisecondsSinceEpoch,
         title: titleController.text.trim(),
         description: descriptionController.text.trim(),
         date: eventDateTime,
-        time: selectedTime.format(context),
-        location: locationText,
+        time: '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+        location: locationController.text.trim(),
         type: eventDateTime.isAfter(DateTime.now()) ? 'upcoming' : 'past',
-        teamId: selectedTeamId ?? 1,  // Use selected team or default to 1
-        latitude: lat,
-        longitude: lng,
+        iconType: 'soccer', // match icon
+        teamId: selectedTeamId,
         googleMapsLink: googleMapsLinkController.text.trim().isEmpty 
             ? null 
             : googleMapsLinkController.text.trim(),
@@ -476,27 +488,26 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
             : directionsLinkController.text.trim(),
       );
       
-      // save it
-      await repository.createEvent(newEvent);
+      await repository.createEvent(newMatch);
       
-      // refresh the events list and routeplanner
+      // refresh
       ref.invalidate(eventsProvider);
       ref.invalidate(upcomingEventsProvider);
       
-      // show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Event created successfully!'),
+            content: Text('Match created successfully!'),
             backgroundColor: AppColors.success,
             duration: Duration(seconds: 2),
           ),
         );
         
-        // clear the form
+        // clear form
         titleController.clear();
         locationController.clear();
         descriptionController.clear();
+        opponentController.clear();
         googleMapsLinkController.clear();
         directionsLinkController.clear();
         setState(() {
@@ -506,12 +517,11 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
         });
       }
     } catch (e) {
-      // if something goes wrong
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to create event: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            content: Text('Failed to create match: ${e.toString()}'),
+            backgroundColor: AppColors.error,
           ),
         );
       }

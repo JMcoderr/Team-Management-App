@@ -4,6 +4,7 @@ import 'pages/dashboard_page.dart';
 import 'pages/events_page.dart';
 import 'pages/schedule_page.dart';
 import 'pages/organise_page.dart';
+import 'pages/organise_match_page.dart';
 import 'pages/routeplanner_page.dart';
 import 'pages/login.dart';
 import 'pages/teams/teams_page.dart';
@@ -129,7 +130,11 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
               NavigationRailDestination(
                 icon: Icon(Icons.event_available),
-                label: Text('Organise'),
+                label: Text('Organise Event'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.sports_soccer),
+                label: Text('Organise Match'),
               ),
             ],
           ),
@@ -161,6 +166,8 @@ class _MainNavigationState extends State<MainNavigation> {
         return const RouteplannerPage();
       case 5:
         return const OrganisePage();
+      case 6:
+        return const OrganiseMatchPage();
       default:
         return const DashboardPage();
     }
