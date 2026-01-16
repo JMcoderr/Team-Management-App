@@ -86,7 +86,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.sports_soccer, color: Colors.white),
+            Icon(Icons.emoji_events, color: Colors.white),
             const SizedBox(width: AppSpacing.sm),
             const Text('Organise Match'),
           ],
@@ -123,7 +123,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                         ),
-                        child: Icon(Icons.sports_soccer, size: 32, color: Colors.white),
+                        child: Icon(Icons.emoji_events, size: 32, color: Colors.white),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
@@ -169,7 +169,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                         controller: titleController,
                         decoration: _buildInputDecoration(
                           hint: 'e.g. vs Ajax Academy',
-                          icon: Icons.sports_soccer,
+                          icon: Icons.emoji_events,
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),

@@ -133,7 +133,7 @@ class _MainNavigationState extends State<MainNavigation> {
                 label: Text('Organise Event'),
               ),
               NavigationRailDestination(
-                icon: Icon(Icons.sports_soccer),
+                icon: Icon(Icons.emoji_events),
                 label: Text('Organise Match'),
               ),
             ],
