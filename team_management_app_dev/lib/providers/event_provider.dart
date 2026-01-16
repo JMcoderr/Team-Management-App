@@ -81,6 +81,24 @@ final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
         }).toList();
       }
 
+      // sort events by date - future events first (blue), then past events (grey)
+      filtered.sort((a, b) {
+        // check if event is in future or past
+        bool aIsFuture = a.type == 'upcoming';
+        bool bIsFuture = b.type == 'upcoming';
+        
+        // if one is future and other is past, future comes first
+        if (aIsFuture && !bIsFuture) return -1;
+        if (!aIsFuture && bIsFuture) return 1;
+        
+        // if both same type, sort by date (newest first for future, oldest first for past)
+        if (aIsFuture) {
+          return a.date.compareTo(b.date); // upcoming events: soonest first
+        } else {
+          return b.date.compareTo(a.date); // past events: most recent first
+        }
+      });
+
       return AsyncValue.data(filtered);
     },
     loading: () => const AsyncValue.loading(),
