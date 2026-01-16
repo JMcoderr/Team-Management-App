@@ -19,34 +19,48 @@ class _RegisterState extends State<Register> {
   bool isLoading = false;
 
   Future<void> onRegisterPressed() async {
-  setState(() => isLoading = true);
+    setState(() => isLoading = true);
 
-  try {
-    await authService.register(
-      nameController.text,
-      passwordController.text,
-    );
+    try {
+      await authService.register(nameController.text, passwordController.text);
 
-    print('Registered successfully');
+      print('Registered successfully');
 
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const Login()),
-    );
+      if (mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Registration successful! Please login.'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
 
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Register failed: ${e.toString().replaceAll('Exception: ', '')}',
-        ),
-      ),
-    );
-  } finally {
-    setState(() => isLoading = false);
+        // Small delay so user sees the message
+        await Future.delayed(const Duration(milliseconds: 500));
+
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const Login()),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Register failed: ${e.toString().replaceAll('Exception: ', '')}',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
+    }
   }
-}
-
 
   @override
   void dispose() {
@@ -92,7 +106,7 @@ class _RegisterState extends State<Register> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  
+
                   // Title
                   Text(
                     'Create Account',
@@ -109,7 +123,7 @@ class _RegisterState extends State<Register> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxl),
-                  
+
                   // Register Card
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.xl),
@@ -126,25 +140,37 @@ class _RegisterState extends State<Register> {
                           decoration: InputDecoration(
                             labelText: 'Username',
                             labelStyle: TextStyle(color: AppColors.accent),
-                            prefixIcon: Icon(Icons.person, color: AppColors.accent),
+                            prefixIcon: Icon(
+                              Icons.person,
+                              color: AppColors.accent,
+                            ),
                             filled: true,
                             fillColor: AppColors.background,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                               borderSide: BorderSide(color: AppColors.divider),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: BorderSide(color: AppColors.accent, width: 2),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
+                              borderSide: BorderSide(
+                                color: AppColors.accent,
+                                width: 2,
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        
+
                         // Password field
                         TextField(
                           controller: passwordController,
@@ -152,25 +178,37 @@ class _RegisterState extends State<Register> {
                           decoration: InputDecoration(
                             labelText: 'Password',
                             labelStyle: TextStyle(color: AppColors.accent),
-                            prefixIcon: Icon(Icons.lock, color: AppColors.accent),
+                            prefixIcon: Icon(
+                              Icons.lock,
+                              color: AppColors.accent,
+                            ),
                             filled: true,
                             fillColor: AppColors.background,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                               borderSide: BorderSide(color: AppColors.divider),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: BorderSide(color: AppColors.accent, width: 2),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
+                              borderSide: BorderSide(
+                                color: AppColors.accent,
+                                width: 2,
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xl),
-                        
+
                         // Register button
                         SizedBox(
                           width: double.infinity,
@@ -181,7 +219,9 @@ class _RegisterState extends State<Register> {
                               backgroundColor: AppColors.accent,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
                               ),
                               elevation: AppSpacing.elevationSm,
                             ),
@@ -204,22 +244,22 @@ class _RegisterState extends State<Register> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  
+
                   // Login link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         'Already have an account? ',
-                        style: AppTextStyles.body.copyWith(
-                          color: Colors.white,
-                        ),
+                        style: AppTextStyles.body.copyWith(color: Colors.white),
                       ),
                       TextButton(
                         onPressed: () {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => const Login()),
+                            MaterialPageRoute(
+                              builder: (context) => const Login(),
+                            ),
                           );
                         },
                         style: TextButton.styleFrom(

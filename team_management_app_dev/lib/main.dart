@@ -13,9 +13,7 @@ import 'data/services/auth_service.dart';
 void main() {
   runApp(
     // Wrap app with ProviderScope for Riverpod state management
-    const ProviderScope(
-      child: MyApp(),
-    ),
+    const ProviderScope(child: MyApp()),
   );
 }
 
@@ -26,10 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Team Management App',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        useMaterial3: true,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
       // Always show login page first - Jay's auth flow handles navigation
       home: const Login(),
     );
@@ -62,9 +57,10 @@ class _MainNavigationState extends State<MainNavigation> {
         children: [
           // LEFT SIDE: Navigation Rail (Sidebar)
           NavigationRail(
-            selectedIndex: _selectedIndex,  // which item is highlighted
-            onDestinationSelected: _onDestinationSelected,  // what happens on click
-            labelType: NavigationRailLabelType.all,  // show labels always
+            selectedIndex: _selectedIndex, // which item is highlighted
+            onDestinationSelected:
+                _onDestinationSelected, // what happens on click
+            labelType: NavigationRailLabelType.all, // show labels always
             trailing: Expanded(
               child: Align(
                 alignment: Alignment.bottomCenter,
@@ -78,7 +74,9 @@ class _MainNavigationState extends State<MainNavigation> {
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('Logout'),
-                          content: const Text('Are you sure you want to logout?'),
+                          content: const Text(
+                            'Are you sure you want to logout?',
+                          ),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
@@ -88,9 +86,21 @@ class _MainNavigationState extends State<MainNavigation> {
                               onPressed: () {
                                 AuthService().logout();
                                 Navigator.pop(context); // Close dialog
+
+                                // Show logout success message
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Logged out successfully!'),
+                                    backgroundColor: Colors.green,
+                                    duration: Duration(seconds: 2),
+                                  ),
+                                );
+
                                 Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const Login()),
+                                  MaterialPageRoute(
+                                    builder: (context) => const Login(),
+                                  ),
                                 );
                               },
                               style: ElevatedButton.styleFrom(
@@ -138,13 +148,13 @@ class _MainNavigationState extends State<MainNavigation> {
               ),
             ],
           ),
-          
+
           // DIVIDER: Vertical line between sidebar and content
           const VerticalDivider(thickness: 1, width: 1),
-          
+
           // RIGHT SIDE: Main content area
           Expanded(
-            child: _buildPage(),  // shows page based on selection
+            child: _buildPage(), // shows page based on selection
           ),
         ],
       ),
@@ -173,6 +183,3 @@ class _MainNavigationState extends State<MainNavigation> {
     }
   }
 }
-
-
-

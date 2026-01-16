@@ -91,7 +91,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
             const Text('Organise Match'),
           ],
         ),
-        backgroundColor: AppColors.match,
+        backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
       ),
@@ -108,7 +108,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [AppColors.match, AppColors.match.withOpacity(0.8)],
+                      colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -189,18 +189,24 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                       _buildLabel('Your Team'),
                       loadingTeams
                           ? const CircularProgressIndicator()
-                          : DropdownButtonFormField<int>(
+                          : DropdownButtonFormField<int?>(
                               value: selectedTeamId,
                               decoration: _buildInputDecoration(
                                 hint: 'Select team',
                                 icon: Icons.group_outlined,
                               ),
-                              items: userTeams.map((team) {
-                                return DropdownMenuItem(
-                                  value: team.id,
-                                  child: Text(team.name),
-                                );
-                              }).toList(),
+                              items: [
+                                const DropdownMenuItem<int?>(
+                                  value: null,
+                                  child: Text('No team'),
+                                ),
+                                ...userTeams.map((team) {
+                                  return DropdownMenuItem<int?>(
+                                    value: team.id,
+                                    child: Text(team.name),
+                                  );
+                                }).toList(),
+                              ],
                               onChanged: (value) {
                                 setState(() {
                                   selectedTeamId = value;
@@ -340,7 +346,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                             style: AppTextStyles.button,
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.match,
+                            backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),

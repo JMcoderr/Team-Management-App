@@ -26,19 +26,27 @@ class _LoginState extends State<Login> {
 
     try {
       // Login stores token and userId in AuthService singleton
-      await authService.login(
-        nameController.text,
-        passwordController.text,
-      );
+      await authService.login(nameController.text, passwordController.text);
 
       // Navigate to dashboard
       if (mounted) {
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Login successful! Welcome back!'),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+
+        // Small delay so user sees the message
+        await Future.delayed(const Duration(milliseconds: 500));
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainNavigation()),
         );
       }
-
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -101,7 +109,7 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  
+
                   // Title
                   Text(
                     'Welcome Back!',
@@ -118,7 +126,7 @@ class _LoginState extends State<Login> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxl),
-                  
+
                   // Login Card
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.xl),
@@ -135,25 +143,37 @@ class _LoginState extends State<Login> {
                           decoration: InputDecoration(
                             labelText: 'Username',
                             labelStyle: TextStyle(color: AppColors.primary),
-                            prefixIcon: Icon(Icons.person, color: AppColors.primary),
+                            prefixIcon: Icon(
+                              Icons.person,
+                              color: AppColors.primary,
+                            ),
                             filled: true,
                             fillColor: AppColors.background,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                               borderSide: BorderSide(color: AppColors.divider),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: BorderSide(color: AppColors.primary, width: 2),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
+                              borderSide: BorderSide(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.md),
-                        
+
                         // Password field
                         TextField(
                           controller: passwordController,
@@ -161,25 +181,37 @@ class _LoginState extends State<Login> {
                           decoration: InputDecoration(
                             labelText: 'Password',
                             labelStyle: TextStyle(color: AppColors.primary),
-                            prefixIcon: Icon(Icons.lock, color: AppColors.primary),
+                            prefixIcon: Icon(
+                              Icons.lock,
+                              color: AppColors.primary,
+                            ),
                             filled: true,
                             fillColor: AppColors.background,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                               borderSide: BorderSide.none,
                             ),
                             enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                               borderSide: BorderSide(color: AppColors.divider),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              borderSide: BorderSide(color: AppColors.primary, width: 2),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
+                              borderSide: BorderSide(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.xl),
-                        
+
                         // Login button
                         SizedBox(
                           width: double.infinity,
@@ -190,7 +222,9 @@ class _LoginState extends State<Login> {
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
                               ),
                               elevation: AppSpacing.elevationSm,
                             ),
@@ -203,32 +237,29 @@ class _LoginState extends State<Login> {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : Text(
-                                    'Login',
-                                    style: AppTextStyles.button,
-                                  ),
+                                : Text('Login', style: AppTextStyles.button),
                           ),
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  
+
                   // Register link
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         "Don't have an account? ",
-                        style: AppTextStyles.body.copyWith(
-                          color: Colors.white,
-                        ),
+                        style: AppTextStyles.body.copyWith(color: Colors.white),
                       ),
                       TextButton(
                         onPressed: () {
                           Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => const Register()),
+                            MaterialPageRoute(
+                              builder: (context) => const Register(),
+                            ),
                           );
                         },
                         style: TextButton.styleFrom(
@@ -255,5 +286,3 @@ class _LoginState extends State<Login> {
     );
   }
 }
-
-
