@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/event_provider.dart';
 import '../data/models/event.dart';
+import '../data/models/team.dart';
+import '../data/services/teams_service.dart';
+import '../data/services/auth_service.dart';
 
 // showing your schedule as a week planner
 class SchedulePage extends ConsumerStatefulWidget {
@@ -15,6 +18,43 @@ class SchedulePage extends ConsumerStatefulWidget {
 class _SchedulePageState extends ConsumerState<SchedulePage> {
   String? selectedTeam; // which team is selected in dropdown (null = all teams)
   DateTime selectedWeek = DateTime.now(); // current week we're viewing
+  List<Team> userTeams = []; // list of teams where user is member
+  bool loadingTeams = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // load teams when page opens
+    _loadUserTeams();
+  }
+
+  // fetch teams from api
+  Future<void> _loadUserTeams() async {
+    try {
+      final auth = AuthService();
+      final token = auth.token;
+      final userId = auth.userId;
+      
+      // get all teams from api
+      final teamsService = TeamsService();
+      final allTeams = await teamsService.fetchTeams(token);
+      
+      // filter only teams where user is member or owner
+      final filtered = allTeams.where((team) => 
+        team.ownerId == userId || team.memberIds.contains(userId)
+      ).toList();
+      
+      setState(() {
+        userTeams = filtered;
+        loadingTeams = false;
+      });
+    } catch (e) {
+      print('error loading teams: $e');
+      setState(() {
+        loadingTeams = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +78,9 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: DropdownButton<String>(
+              child: loadingTeams
+                ? const Center(child: CircularProgressIndicator())
+                : DropdownButton<String>(
                 value: selectedTeam,
                 isExpanded: true,
                 hint: const Text('All teams'),
@@ -56,27 +98,19 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                       ],
                     ),
                   ),
-                  // TODO: jay will add actual teams later
-                  const DropdownMenuItem<String>(
-                    value: 'Dragons FC',
-                    child: Row(
-                      children: [
-                        Icon(Icons.sports_soccer, size: 18, color: Colors.green),
-                        SizedBox(width: 8),
-                        Text('Dragons FC'),
-                      ],
-                    ),
-                  ),
-                  const DropdownMenuItem<String>(
-                    value: 'Code Warriors',
-                    child: Row(
-                      children: [
-                        Icon(Icons.sports_soccer, size: 18, color: Colors.orange),
-                        SizedBox(width: 8),
-                        Text('Code Warriors'),
-                      ],
-                    ),
-                  ),
+                  // real teams from api
+                  ...userTeams.map((team) {
+                    return DropdownMenuItem<String>(
+                      value: team.name,
+                      child: Row(
+                        children: [
+                          Icon(Icons.group, size: 18, color: Colors.green),
+                          SizedBox(width: 8),
+                          Text(team.name),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                 ],
                 onChanged: (value) {
                   setState(() {
