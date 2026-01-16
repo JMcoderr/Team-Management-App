@@ -46,6 +46,12 @@ class _TeamsPageState extends State<TeamsPage> {
     });
   }
 
+  // Check if user is team owner
+  bool _isUserTeamOwner(Team team) {
+    final loggedInUserId = auth.userId;
+    return team.ownerId == loggedInUserId;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -195,6 +201,8 @@ class _TeamsPageState extends State<TeamsPage> {
                                   ),
                                 ),
                                 const SizedBox(width: AppSpacing.sm),
+                                // Show edit button only if user is team owner
+                                if (_isUserTeamOwner(team))
                                 IconButton(
                                   onPressed: () {
                                     Navigator.push(
@@ -209,6 +217,7 @@ class _TeamsPageState extends State<TeamsPage> {
                                   color: AppColors.primary,
                                   tooltip: 'Edit team',
                                 ),
+
                               ],
                             ),
                           ),
