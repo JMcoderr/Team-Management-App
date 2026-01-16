@@ -27,12 +27,22 @@ class _CreateTeamPageState extends State<CreateTeamPage> {
       );
 
       if (!mounted) return;
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Team created successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
       // Return true to indicate success, parent page can refresh
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create team: $e')),
+        SnackBar(
+          content: Text('Failed to create team: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) {

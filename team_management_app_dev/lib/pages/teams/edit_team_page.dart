@@ -30,12 +30,22 @@ class _EditTeamPageState extends State<EditTeamPage> {
       );
 
       if (!mounted) return;
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Team updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
       // Return true to indicate success
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to edit team: $e')),
+        SnackBar(
+          content: Text('Failed to edit team: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
       );
     } finally {
       if (mounted) {

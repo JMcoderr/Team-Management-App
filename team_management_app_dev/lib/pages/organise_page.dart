@@ -391,15 +391,6 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
       // get the repository
       final repository = ref.read(eventRepositoryProvider);
       
-      // combining date and time
-      final eventDateTime = DateTime(
-        selectedDate.year,
-        selectedDate.month,
-        selectedDate.day,
-        selectedTime.hour,
-        selectedTime.minute,
-      );
-      
       // get location coordinates if preset was selected
       double? lat;
       double? lng;
@@ -460,7 +451,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text('Failed to create event: ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );

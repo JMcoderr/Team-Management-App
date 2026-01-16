@@ -7,6 +7,7 @@ import 'pages/organise_page.dart';
 import 'pages/routeplanner_page.dart';
 import 'pages/login.dart';
 import 'pages/teams/teams_page.dart';
+import 'data/services/auth_service.dart';
 
 void main() {
   runApp(
@@ -63,6 +64,25 @@ class _MainNavigationState extends State<MainNavigation> {
             selectedIndex: _selectedIndex,  // which item is highlighted
             onDestinationSelected: _onDestinationSelected,  // what happens on click
             labelType: NavigationRailLabelType.all,  // show labels always
+            trailing: Expanded(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: IconButton(
+                    icon: const Icon(Icons.logout),
+                    tooltip: 'Logout',
+                    onPressed: () {
+                      AuthService().logout();
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => const Login()),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
             destinations: const [
               // main menu items at top
               NavigationRailDestination(
