@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/event_card.dart';
 import '../providers/event_provider.dart';
+import '../data/models/team.dart';
+import '../data/services/teams_service.dart';
+import '../data/services/auth_service.dart';
 
 // showing all events with filter options
 class EventsPage extends ConsumerStatefulWidget {
@@ -12,6 +15,44 @@ class EventsPage extends ConsumerStatefulWidget {
 }
 
 class _EventsPageState extends ConsumerState<EventsPage> {
+  String? selectedTeamFilter; // filter by team
+  List<Team> userTeams = []; // teams where user is member
+  bool loadingTeams = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // load teams when page opens
+    _loadUserTeams();
+  }
+
+  // get teams from api
+  Future<void> _loadUserTeams() async {
+    try {
+      final auth = AuthService();
+      final token = auth.token;
+      final userId = auth.userId;
+      
+      // fetch all teams
+      final teamsService = TeamsService();
+      final allTeams = await teamsService.fetchTeams(token);
+      
+      // only show teams where user is owner or member
+      final filtered = allTeams.where((team) => 
+        team.ownerId == userId || team.memberIds.contains(userId)
+      ).toList();
+      
+      setState(() {
+        userTeams = filtered;
+        loadingTeams = false;
+      });
+    } catch (e) {
+      print('error loading teams: $e');
+      setState(() {
+        loadingTeams = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,6 +63,62 @@ class _EventsPageState extends ConsumerState<EventsPage> {
       ),
       body: Column(
         children: [
+          // team filter dropdown
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            color: Colors.grey[100],
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: loadingTeams
+                ? const Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                : DropdownButton<String>(
+                value: selectedTeamFilter,
+                isExpanded: true,
+                hint: const Text('Filter by team'),
+                underline: Container(),
+                icon: const Icon(Icons.arrow_drop_down),
+                items: [
+                  // all teams option
+                  const DropdownMenuItem<String>(
+                    value: null,
+                    child: Row(
+                      children: [
+                        Icon(Icons.group, size: 18, color: Colors.blue),
+                        SizedBox(width: 8),
+                        Text('All teams'),
+                      ],
+                    ),
+                  ),
+                  // real teams from api
+                  ...userTeams.map((team) {
+                    return DropdownMenuItem<String>(
+                      value: team.name,
+                      child: Row(
+                        children: [
+                          Icon(Icons.group, size: 18, color: Colors.green),
+                          SizedBox(width: 8),
+                          Text(team.name),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                ],
+                onChanged: (value) {
+                  setState(() {
+                    selectedTeamFilter = value;
+                  });
+                },
+              ),
+            ),
+          ),
+
           // searchbar
           Container(
             padding: const EdgeInsets.all(16.0),
@@ -138,8 +235,19 @@ class _EventsPageState extends ConsumerState<EventsPage> {
 
       // Success state 
       data: (events) {
+        // filter by team if selected
+        var displayEvents = events;
+        if (selectedTeamFilter != null) {
+          displayEvents = events.where((event) {
+            // check if event belongs to selected team
+            // assuming event has a teamName or similar field
+            return event.location.contains(selectedTeamFilter!) || 
+                   event.title.contains(selectedTeamFilter!);
+          }).toList();
+        }
+
         // Show empty state if no events match
-        if (events.isEmpty) {
+        if (displayEvents.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -170,9 +278,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
           },
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            itemCount: events.length,
+            itemCount: displayEvents.length,
             itemBuilder: (context, i) {
-              final event = events[i];
+              final event = displayEvents[i];
               return EventCard(
                 title: event.title,
                 date: '${event.date.day.toString().padLeft(2, '0')}/${event.date.month.toString().padLeft(2, '0')}/${event.date.year}',
