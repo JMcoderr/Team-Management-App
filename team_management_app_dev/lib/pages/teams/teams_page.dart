@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:team_management_app_dev/data/services/teams_service.dart';
 import 'package:team_management_app_dev/data/models/team.dart';
 import 'package:team_management_app_dev/data/services/auth_service.dart';
+import '../../utils/constants.dart';
+import '../../widgets/custom_widgets.dart';
 import 'create_team_page.dart';
 import 'edit_team_page.dart';
 
@@ -29,9 +31,12 @@ class TeamsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Teams'),
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
             // Invitations box (placeholder - not implemented yet)
@@ -71,63 +76,135 @@ class TeamsPage extends StatelessWidget {
                 future: teamsFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return ListView.builder(
+                      itemCount: 3,
+                      itemBuilder: (context, index) => const CardSkeleton(),
+                    );
                   }
 
                   if (snapshot.hasError) {
                     return Center(
-                      child: Text(
-                        'Error: ${snapshot.error}',
-                        style: const TextStyle(color: Colors.red),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.error_outline, size: 60, color: AppColors.error),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'Error loading teams',
+                            style: AppTextStyles.h4,
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            '${snapshot.error}',
+                            style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     );
                   }
 
                   final teams = snapshot.data!;
 
-                  // Check if no teams
+                  // Empty state
                   if (teams.isEmpty) {
-                    return const Center(
-                      child: Text('You are not part of any teams.'),
+                    return EmptyState(
+                      icon: Icons.group,
+                      title: 'No teams yet',
+                      message: 'Create your first team to get started!\nInvite members and organize events together.',
+                      buttonText: 'Create Team',
+                      onButtonPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CreateTeamPage(),
+                          ),
+                        );
+                      },
                     );
                   }
 
-                  // Display teams in list
+                  // Display teams with animation
                   return ListView.builder(
                     itemCount: teams.length,
                     itemBuilder: (context, index) {
                       final team = teams[index];
-
                       final teamId = team.id.toString();
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: ListTile(
-                          leading: Icon(team.icon != null
-                              ? Icons.calendar_today
-                              : Icons.group),
-                          title: Text(team.name),
-                          subtitle: Text('${team.membersCount} members'),
-
-                          trailing: ElevatedButton.icon(
-                            onPressed: () {
-                              Navigator.push(context,
-                                  MaterialPageRoute(
-                                    builder: (context) => EditTeamPage(teamId: teamId)
-                                  )
-                                );
-                              },
-                            icon: const Icon(Icons.edit),
-                            label: const Text('Edit Team'),
-                            style: ElevatedButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
+                      
+                      return TweenAnimationBuilder<double>(
+                        duration: Duration(milliseconds: 300 + (index * 100)),
+                        tween: Tween(begin: 0.0, end: 1.0),
+                        builder: (context, value, child) {
+                          return Opacity(
+                            opacity: value,
+                            child: Transform.translate(
+                              offset: Offset(0, 20 * (1 - value)),
+                              child: child,
                             ),
+                          );
+                        },
+                        child: CustomCard(
+                          margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                          onTap: () {
+                            // Could navigate to team details page
+                          },
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                ),
+                                child: Icon(
+                                  team.icon != null ? Icons.calendar_today : Icons.group,
+                                  color: AppColors.primary,
+                                  size: 28,
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      team.name,
+                                      style: AppTextStyles.h5,
+                                    ),
+                                    const SizedBox(height: AppSpacing.xxs),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          Icons.people,
+                                          size: 16,
+                                          color: AppColors.textSecondary,
+                                        ),
+                                        const SizedBox(width: AppSpacing.xxs),
+                                        Text(
+                                          '${team.membersCount} members',
+                                          style: AppTextStyles.bodySmall,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              IconButton(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => EditTeamPage(teamId: teamId),
+                                    ),
+                                  );
+                                },
+                                icon: const Icon(Icons.edit),
+                                color: AppColors.primary,
+                                tooltip: 'Edit team',
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -137,28 +214,29 @@ class TeamsPage extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm),
 
             // Create Team button
-            ElevatedButton.icon(
+            AnimatedButton(
               onPressed: () {
-                Navigator.push(context,
-                    MaterialPageRoute(builder: (context) {
-                  return const CreateTeamPage();
-                }));
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const CreateTeamPage(),
+                  ),
+                );
               },
-              icon: const Icon(Icons.add),
-              label: const Text('Create New Team'),
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: const [
+                  Icon(Icons.add),
+                  SizedBox(width: AppSpacing.xs),
+                  Text('Create New Team', style: AppTextStyles.button),
+                ],
               ),
             ),
 
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpacing.sm),
           ],
         ),
       ),

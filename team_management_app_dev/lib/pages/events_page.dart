@@ -5,6 +5,9 @@ import '../providers/event_provider.dart';
 import '../data/models/team.dart';
 import '../data/services/teams_service.dart';
 import '../data/services/auth_service.dart';
+import '../utils/constants.dart';
+import '../widgets/custom_widgets.dart';
+import '../utils/date_formatter.dart';
 
 // showing all events with filter options
 class EventsPage extends ConsumerStatefulWidget {
@@ -18,6 +21,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
   String? selectedTeamFilter; // filter by team
   List<Team> userTeams = []; // teams where user is member
   bool loadingTeams = true;
+  String dateRangeFilter = 'all'; // all, today, week, month
 
   @override
   void initState() {
@@ -59,24 +63,47 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Events'),
-        backgroundColor: Colors.blue,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [AppColors.primary, AppColors.primaryDark],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
       ),
       body: Column(
         children: [
           // team filter dropdown
           Container(
-            padding: const EdgeInsets.all(16.0),
-            color: Colors.grey[100],
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              border: Border(
+                bottom: BorderSide(color: AppColors.divider, width: 1),
+              ),
+            ),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
               decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                boxShadow: AppShadows.small,
               ),
               child: loadingTeams
                 ? const Padding(
-                    padding: EdgeInsets.all(12.0),
-                    child: Center(child: CircularProgressIndicator()),
+                    padding: EdgeInsets.all(AppSpacing.sm),
+                    child: Center(
+                      child: SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
                   )
                 : DropdownButton<String>(
                 value: selectedTeamFilter,
@@ -121,20 +148,34 @@ class _EventsPageState extends ConsumerState<EventsPage> {
 
           // searchbar
           Container(
-            padding: const EdgeInsets.all(16.0),
-            color: Colors.grey[100],
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              border: Border(
+                bottom: BorderSide(color: AppColors.divider, width: 1),
+              ),
+            ),
             child: TextField(
               onChanged: (value) {
                 ref.read(searchQueryProvider.notifier).update(value);
               },
               decoration: InputDecoration(
-                hintText: 'Search...',
-                prefixIcon: const Icon(Icons.search),
+                hintText: 'Search events...',
+                hintStyle: AppTextStyles.body.copyWith(color: AppColors.textHint),
+                prefixIcon: Icon(Icons.search, color: AppColors.primary),
                 filled: true,
-                fillColor: Colors.white,
+                fillColor: AppColors.surface,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  borderSide: BorderSide(color: AppColors.divider),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  borderSide: BorderSide(color: AppColors.primary, width: 2),
                 ),
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
@@ -143,14 +184,53 @@ class _EventsPageState extends ConsumerState<EventsPage> {
 
           // filter buttons
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              border: Border(
+                bottom: BorderSide(color: AppColors.divider, width: 1),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildFilterChip('All', 0),
-                const SizedBox(width: 8),
-                _buildFilterChip('Upcoming', 1),
-                const SizedBox(width: 8),
-                _buildFilterChip('Past', 2),
+                Text(
+                  'Status',
+                  style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildFilterChip('All', 0),
+                      const SizedBox(width: AppSpacing.xs),
+                      _buildFilterChip('Upcoming', 1),
+                      const SizedBox(width: AppSpacing.xs),
+                      _buildFilterChip('Past', 2),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  'Date Range',
+                  style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      _buildDateRangeChip('All', 'all'),
+                      const SizedBox(width: AppSpacing.xs),
+                      _buildDateRangeChip('Today', 'today'),
+                      const SizedBox(width: AppSpacing.xs),
+                      _buildDateRangeChip('This Week', 'week'),
+                      const SizedBox(width: AppSpacing.xs),
+                      _buildDateRangeChip('This Month', 'month'),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -173,16 +253,55 @@ class _EventsPageState extends ConsumerState<EventsPage> {
       label: Text(label),
       selected: isSelected,
       onSelected: (bool selected) {
-        // change selected filter
         ref.read(selectedFilterProvider.notifier).update(index);
       },
-      selectedColor: Colors.blue,
-      backgroundColor: Colors.grey[200],
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.black87,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      selectedColor: AppColors.primary,
+      backgroundColor: AppColors.surface,
+      side: BorderSide(
+        color: isSelected ? AppColors.primary : AppColors.divider,
+        width: 1.5,
+      ),
+      labelStyle: AppTextStyles.bodySmall.copyWith(
+        color: isSelected ? Colors.white : AppColors.textPrimary,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
       checkmarkColor: Colors.white,
+      elevation: isSelected ? AppSpacing.elevationSm : 0,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxs,
+      ),
+    );
+  }
+
+  // date range filter chips
+  Widget _buildDateRangeChip(String label, String value) {
+    final bool isSelected = dateRangeFilter == value;
+
+    return FilterChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (bool selected) {
+        setState(() {
+          dateRangeFilter = value;
+        });
+      },
+      selectedColor: AppColors.accent,
+      backgroundColor: AppColors.surface,
+      side: BorderSide(
+        color: isSelected ? AppColors.accent : AppColors.divider,
+        width: 1.5,
+      ),
+      labelStyle: AppTextStyles.bodySmall.copyWith(
+        color: isSelected ? Colors.white : AppColors.textPrimary,
+        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+      ),
+      checkmarkColor: Colors.white,
+      elevation: isSelected ? AppSpacing.elevationSm : 0,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xxs,
+      ),
     );
   }
 
@@ -192,44 +311,51 @@ class _EventsPageState extends ConsumerState<EventsPage> {
 
     return eventsData.when(
       // when loading
-      loading: () => const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Loading events...'),
-          ],
-        ),
+      loading: () => ListView.builder(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        itemCount: 5,
+        itemBuilder: (context, index) => const CardSkeleton(),
       ),
 
       // if error happens
       error: (error, stack) => Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-            const SizedBox(height: 16),
-            Text(
-              'Something went wrong',
-              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              error.toString(),
-              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                // try again
-                ref.invalidate(eventsProvider);
-              },
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 80, color: AppColors.error),
+              const SizedBox(height: AppSpacing.lg),
+              Text(
+                'Oops! Something went wrong',
+                style: AppTextStyles.h4,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                error.toString(),
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                textAlign: TextAlign.center,
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              AnimatedButton(
+                onPressed: () {
+                  ref.invalidate(eventsProvider);
+                },
+                backgroundColor: AppColors.primary,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.refresh),
+                    SizedBox(width: AppSpacing.xs),
+                    Text('Try Again', style: AppTextStyles.button),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
 
@@ -239,76 +365,76 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         var displayEvents = events;
         if (selectedTeamFilter != null) {
           displayEvents = events.where((event) {
-            // check if event belongs to selected team
-            // assuming event has a teamName or similar field
             return event.location.contains(selectedTeamFilter!) || 
                    event.title.contains(selectedTeamFilter!);
           }).toList();
         }
 
+        // filter by date range
+        if (dateRangeFilter != 'all') {
+          displayEvents = displayEvents.where((event) {
+            if (dateRangeFilter == 'today') {
+              return DateFormatter.isToday(event.date);
+            } else if (dateRangeFilter == 'week') {
+              return DateFormatter.isThisWeek(event.date);
+            } else if (dateRangeFilter == 'month') {
+              return DateFormatter.isThisMonth(event.date);
+            }
+            return true;
+          }).toList();
+        }
+
         // Show empty state if no events match
         if (displayEvents.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.event_busy, size: 64, color: Colors.grey[400]),
-                const SizedBox(height: 16),
-                Text(
-                  'No events found',
-                  style: TextStyle(fontSize: 18, color: Colors.grey[600]),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  ref.watch(searchQueryProvider).isNotEmpty
-                      ? 'Try a different search'
-                      : 'Check back later!',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                ),
-              ],
-            ),
+          return EmptyState(
+            icon: Icons.event_busy,
+            title: 'No events found',
+            message: events.isEmpty 
+                ? 'Create your first event to get started!\nOrganize training sessions, matches, and meetings.'
+                : 'No events match your filters.\nTry adjusting the search or filters.',
           );
         }
 
-        // showing events
+        // showing events with fade-in animation
         return RefreshIndicator(
           onRefresh: () async {
-            // refresh when pulled down
             ref.invalidate(eventsProvider);
           },
+          color: AppColors.primary,
           child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.all(AppSpacing.md),
             itemCount: displayEvents.length,
             itemBuilder: (context, i) {
               final event = displayEvents[i];
-              return EventCard(
-                title: event.title,
-                date: '${event.date.day.toString().padLeft(2, '0')}/${event.date.month.toString().padLeft(2, '0')}/${event.date.year}',
-                time: event.time,
-                location: event.location,
-                icon: _getIconForType(event.iconType),
-                iconColor: event.type == 'upcoming' ? Colors.blue : Colors.grey,
-                onTap: () => _showEventDetails(event),
+              
+              // Fade-in animation for list items
+              return TweenAnimationBuilder<double>(
+                duration: Duration(milliseconds: 200 + (i * 50)),
+                tween: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  return Opacity(
+                    opacity: value,
+                    child: Transform.translate(
+                      offset: Offset(0, 10 * (1 - value)),
+                      child: child,
+                    ),
+                  );
+                },
+                child: EventCard(
+                  title: event.title,
+                  date: DateFormatter.formatRelativeDate(event.date),
+                  time: event.time,
+                  location: event.location,
+                  icon: EventTypeHelper.getIcon(event.iconType),
+                  iconColor: EventTypeHelper.getColor(event.iconType),
+                  onTap: () => _showEventDetails(event),
+                ),
               );
             },
           ),
         );
       },
     );
-  }
-
-  // getting icon for event type
-  IconData _getIconForType(String iconType) {
-    switch (iconType) {
-      case 'training':
-        return Icons.fitness_center;
-      case 'meeting':
-        return Icons.meeting_room;
-      case 'match':
-        return Icons.sports_soccer;
-      default:
-        return Icons.event_note;
-    }
   }
 
   // showing event details when clicked
@@ -318,12 +444,15 @@ class _EventsPageState extends ConsumerState<EventsPage> {
       builder: (context) => AlertDialog(
         title: Row(
           children: [
-            Icon(_getIconForType(event.iconType), color: Colors.blue),
+            Icon(
+              EventTypeHelper.getIcon(event.iconType),
+              color: EventTypeHelper.getColor(event.iconType),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 event.title,
-                style: const TextStyle(fontSize: 20),
+                style: AppTextStyles.h5,
               ),
             ),
           ],
@@ -335,21 +464,24 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             // date
             Row(
               children: [
-                const Icon(Icons.calendar_today, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text('${event.date.day}/${event.date.month}/${event.date.year}'),
+                Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: AppSpacing.xs),
+                Text(
+                  DateFormatter.formatRelativeDate(event.date),
+                  style: AppTextStyles.body,
+                ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.xs),
             // time
             Row(
               children: [
-                const Icon(Icons.access_time, size: 16, color: Colors.grey),
-                const SizedBox(width: 8),
-                Text(event.time),
+                Icon(Icons.access_time, size: 16, color: AppColors.textSecondary),
+                const SizedBox(width: AppSpacing.xs),
+                Text(event.time, style: AppTextStyles.body),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.xs),
             // location
             Row(
               children: [
