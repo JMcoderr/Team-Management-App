@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../providers/event_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../utils/constants.dart';
+import '../widgets/custom_widgets.dart';
+import '../utils/date_formatter.dart';
 
 // planning routes to event locations
 class RouteplannerPage extends ConsumerStatefulWidget {
@@ -55,8 +57,33 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
           // event locations list
           Expanded(
             child: upcomingEvents.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, stack) => Center(child: Text('Error: $err')),
+              loading: () => ListView.builder(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                itemCount: 3,
+                itemBuilder: (context, index) => const CardSkeleton(),
+              ),
+              error: (err, stack) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 80, color: AppColors.error),
+                      const SizedBox(height: AppSpacing.lg),
+                      Text(
+                        'Error loading events',
+                        style: AppTextStyles.h4,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        err.toString(),
+                        style: AppTextStyles.bodySmall,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
               data: (events) {
                 // filtering by search
                 final filteredEvents = events.where((event) {
@@ -65,30 +92,28 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
                 }).toList();
 
                 if (filteredEvents.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.map_outlined, size: 64, color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text(
-                          searchQuery.isEmpty 
-                              ? 'No upcoming events to plan routes for!'
-                              : 'No events found matching "$searchQuery"',
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
-                      ],
-                    ),
+                  return EmptyState(
+                    icon: Icons.map_outlined,
+                    title: searchQuery.isEmpty ? 'No upcoming events' : 'No events found',
+                    message: searchQuery.isEmpty
+                        ? 'Create upcoming events to plan routes to their locations.'
+                        : 'No events found matching "$searchQuery".',
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: filteredEvents.length,
-                  itemBuilder: (context, index) {
-                    final event = filteredEvents[index];
-                    return _buildLocationCard(event);
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(upcomingEventsProvider);
                   },
+                  color: AppColors.primary,
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    itemCount: filteredEvents.length,
+                    itemBuilder: (context, index) {
+                      final event = filteredEvents[index];
+                      return _buildLocationCard(event);
+                    },
+                  ),
                 );
               },
             ),
@@ -102,131 +127,107 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
 
   // building card for each event location
   Widget _buildLocationCard(event) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // event title
-            Row(
-              children: [
-                // icon based on event type
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    event.iconType == 'match' 
-                        ? Icons.sports_soccer 
-                        : event.iconType == 'training'
-                            ? Icons.fitness_center
-                            : Icons.event,
-                    color: Colors.white,
-                    size: 20,
-                  ),
+    return CustomCard(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // event title
+          Row(
+            children: [
+              // icon based on event type
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: EventTypeHelper.getColor(event.iconType),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        DateFormat('EEEE, dd MMM yyyy').format(event.date),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
+                child: Icon(
+                  EventTypeHelper.getIcon(event.iconType),
+                  color: Colors.white,
+                  size: 20,
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // location info
-            Row(
-              children: [
-                Icon(Icons.location_on, size: 20, color: Colors.red[400]),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        event.location,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                      if (event.latitude != null && event.longitude != null)
-                        const SizedBox(height: 2),
-                      if (event.latitude != null && event.longitude != null)
-                        Text(
-                          'Lat: ${event.latitude!.toStringAsFixed(4)}, Lng: ${event.longitude!.toStringAsFixed(4)}',
-                          style: TextStyle(fontSize: 11, color: Colors.grey[600]),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(Icons.access_time, size: 20, color: Colors.blue[400]),
-                const SizedBox(width: 8),
-                Text(
-                  event.time,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // buttons for navigation
-            Row(
-              children: [
-                // google maps button
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _openGoogleMaps(event.location),
-                    icon: const Icon(Icons.map, size: 18),
-                    label: const Text('Google Maps'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event.title,
+                      style: AppTextStyles.h5,
                     ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                // directions button
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () => _openDirections(event.location),
-                    icon: const Icon(Icons.directions, size: 18),
-                    label: const Text('Directions'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+                    const SizedBox(height: AppSpacing.xxs),
+                    Text(
+                      DateFormatter.formatRelativeDate(event.date),
+                      style: AppTextStyles.bodySmall,
                     ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // location info
+          Row(
+            children: [
+              Icon(Icons.location_on, size: 20, color: AppColors.error),
+              const SizedBox(width: AppSpacing.xs),
+              Expanded(
+                child: Text(
+                  event.location,
+                  style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            children: [
+              Icon(Icons.access_time, size: 20, color: AppColors.primary),
+              const SizedBox(width: AppSpacing.xs),
+              Text(
+                event.time,
+                style: AppTextStyles.body,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+
+          // buttons for navigation
+          Row(
+            children: [
+              // google maps button
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _openGoogleMaps(event.location),
+                  icon: const Icon(Icons.map, size: 18),
+                  label: const Text('Google Maps'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                   ),
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+              const SizedBox(width: AppSpacing.xs),
+              // directions button
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => _openDirections(event.location),
+                  icon: const Icon(Icons.directions, size: 18),
+                  label: const Text('Directions'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

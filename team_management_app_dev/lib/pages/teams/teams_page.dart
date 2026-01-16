@@ -39,37 +39,6 @@ class TeamsPage extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
-            // Invitations box (placeholder - not implemented yet)
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Row(
-                  children: [
-                    const Icon(Icons.mail_outline),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        'You have 2 team invitations',
-                        style: TextStyle(fontSize: 16),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        // TODO: Implement invitations page
-                      },
-                      child: const Text('View'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
             // Teams list
             Expanded(
               child: FutureBuilder<List<Team>>(

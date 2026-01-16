@@ -30,14 +30,6 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
   List<Team> userTeams = []; // teams where user is member
   bool loadingTeams = true;
   
-  // location helper
-  String? selectedLocationPreset;
-  final List<Map<String, dynamic>> locationPresets = [
-    {'name': 'Sporthallen Zuid', 'lat': 52.3376, 'lng': 4.8682},
-    {'name': 'Sportcomplex Noord', 'lat': 52.3945, 'lng': 4.9123},
-    {'name': 'Training Ground', 'lat': 52.3702, 'lng': 4.8952},
-  ];
-  
   bool isLoading = false; // to show spinner when saving
 
   @override
@@ -77,7 +69,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
 
   @override
   void dispose() {
-    // cleanup when page closes (like turning off lights when leaving a room)
+    // cleanup when page closes 
     titleController.dispose();
     locationController.dispose();
     descriptionController.dispose();
@@ -226,39 +218,6 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
             
             const SizedBox(height: 20),
             
-            // location presets
-            const Text(
-              'Quick Location',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              children: locationPresets.map((preset) {
-                final isSelected = selectedLocationPreset == preset['name'];
-                return ChoiceChip(
-                  label: Text(preset['name']),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        selectedLocationPreset = preset['name'];
-                        locationController.text = preset['name'];
-                      } else {
-                        selectedLocationPreset = null;
-                      }
-                    });
-                  },
-                  selectedColor: Colors.blue,
-                  labelStyle: TextStyle(
-                    color: isSelected ? Colors.white : Colors.black87,
-                  ),
-                );
-              }).toList(),
-            ),
-            
-            const SizedBox(height: 12),
-            
             // location field
             const Text(
               'Location',
@@ -391,19 +350,19 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
       // get the repository
       final repository = ref.read(eventRepositoryProvider);
       
+      // combining date and time
+      final eventDateTime = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        selectedTime.hour,
+        selectedTime.minute,
+      );
+      
       // get location coordinates if preset was selected
       double? lat;
       double? lng;
       final locationText = locationController.text.trim();
-      
-      // check if location matches a preset
-      for (var preset in locationPresets) {
-        if (preset['name'] == locationText) {
-          lat = preset['lat'];
-          lng = preset['lng'];
-          break;
-        }
-      }
       
       // create the event object
       final newEvent = Event(
@@ -443,7 +402,6 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
           selectedDate = DateTime.now();
           selectedTime = TimeOfDay.now();
           selectedTeamId = null;
-          selectedLocationPreset = null;
         });
       }
     } catch (e) {

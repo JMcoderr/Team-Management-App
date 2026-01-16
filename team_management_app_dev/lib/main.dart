@@ -73,10 +73,32 @@ class _MainNavigationState extends State<MainNavigation> {
                     icon: const Icon(Icons.logout),
                     tooltip: 'Logout',
                     onPressed: () {
-                      AuthService().logout();
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const Login()),
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text('Logout'),
+                          content: const Text('Are you sure you want to logout?'),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cancel'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                AuthService().logout();
+                                Navigator.pop(context); // Close dialog
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const Login()),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                              ),
+                              child: const Text('Logout'),
+                            ),
+                          ],
+                        ),
                       );
                     },
                   ),
