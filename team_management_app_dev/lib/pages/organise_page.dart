@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../data/models/event.dart';
+import '../data/models/team.dart';
 import '../providers/event_provider.dart';
+import '../data/services/teams_service.dart';
+import '../data/services/auth_service.dart';
 
 // page for creating new events/matches
 class OrganisePage extends ConsumerStatefulWidget {
@@ -24,6 +27,8 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
   
   // team selection (for API v2)
   int? selectedTeamId;
+  List<Team> userTeams = []; // teams where user is member
+  bool loadingTeams = true;
   
   // location helper
   String? selectedLocationPreset;
@@ -34,6 +39,41 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
   ];
   
   bool isLoading = false; // to show spinner when saving
+
+  @override
+  void initState() {
+    super.initState();
+    // load teams when page opens
+    _loadUserTeams();
+  }
+
+  // get teams from api
+  Future<void> _loadUserTeams() async {
+    try {
+      final auth = AuthService();
+      final token = auth.token;
+      final userId = auth.userId;
+      
+      // fetch all teams
+      final teamsService = TeamsService();
+      final allTeams = await teamsService.fetchTeams(token);
+      
+      // only show teams where user is owner or member
+      final filtered = allTeams.where((team) => 
+        team.ownerId == userId || team.memberIds.contains(userId)
+      ).toList();
+      
+      setState(() {
+        userTeams = filtered;
+        loadingTeams = false;
+      });
+    } catch (e) {
+      print('error loading teams: $e');
+      setState(() {
+        loadingTeams = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -92,20 +132,29 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                 borderRadius: BorderRadius.circular(8),
                 color: Colors.grey[50],
               ),
-              child: DropdownButton<int?>(
+              child: loadingTeams 
+                ? const Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                : DropdownButton<int?>(
                 value: selectedTeamId,
                 isExpanded: true,
                 underline: Container(),
-                hint: const Text('Select a team (optional for now)'),
-                items: const [
-                  DropdownMenuItem(
+                hint: const Text('Select a team'),
+                items: [
+                  // no team option
+                  const DropdownMenuItem(
                     value: null,
                     child: Text('No team selected'),
                   ),
-                  DropdownMenuItem(
-                    value: 1,
-                    child: Text('Team 1 (Default)'),
-                  ),
+                  // real teams from api
+                  ...userTeams.map((team) {
+                    return DropdownMenuItem(
+                      value: team.id,
+                      child: Text(team.name),
+                    );
+                  }).toList(),
                 ],
                 onChanged: (value) {
                   setState(() {
