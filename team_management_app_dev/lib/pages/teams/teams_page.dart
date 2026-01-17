@@ -19,6 +19,7 @@ class _TeamsPageState extends State<TeamsPage> {
   late Future<List<Team>> teamsFuture;
   final teamsService = TeamsService();
   final auth = AuthService();
+  final Set<int> expandedTeams = {};
 
   @override
   void initState() {
@@ -32,15 +33,12 @@ class _TeamsPageState extends State<TeamsPage> {
 
     setState(() {
       teamsFuture = teamsService.fetchTeams(token).then((teams) {
-        print('Fetched ${teams.length} teams from API');
         // Filter teams where user is owner or a member
         final filtered = teams.where((team) {
           final isOwner = team.ownerId == loggedInUserId;
           final isMember = team.memberIds.contains(loggedInUserId);
-          print('Team "${team.name}": owner=$isOwner, member=$isMember');
           return isOwner || isMember;
         }).toList();
-        print('Filtered to ${filtered.length} teams for user $loggedInUserId');
         return filtered;
       });
     });
@@ -77,27 +75,12 @@ class _TeamsPageState extends State<TeamsPage> {
                     );
                   }
 
+                  // Show error if any happen
                   if (snapshot.hasError) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 60,
-                            color: AppColors.error,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text('Error loading teams', style: AppTextStyles.h4),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            '${snapshot.error}',
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                      child: Text(
+                        'Failed loading teams: ${snapshot.error}',
+                        style: AppTextStyles.body.copyWith(color: Colors.red),
                       ),
                     );
                   }
@@ -110,114 +93,223 @@ class _TeamsPageState extends State<TeamsPage> {
                       icon: Icons.group,
                       title: 'No teams yet',
                       message:
-                          'Create your first team to get started!\nInvite members and organize events together.',
-                      buttonText: 'Create Team',
-                      onButtonPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CreateTeamPage(),
-                          ),
-                        );
-                      },
+                          'Create your first team or get invited to one and they will appear here!',
                     );
                   }
 
-                  // Display teams with animation
-                  return RefreshIndicator(
-                    onRefresh: () async {
-                      _loadTeams();
-                      // Wait for the new future to complete
-                      await teamsFuture;
-                    },
-                    color: AppColors.primary,
+                  // Display teams
+                  return Material(
                     child: ListView.builder(
                       itemCount: teams.length,
                       itemBuilder: (context, index) {
                         final team = teams[index];
                         final teamId = team.id.toString();
+                        final isExpanded = expandedTeams.contains(team.id);
 
-                        return TweenAnimationBuilder<double>(
-                          duration: Duration(milliseconds: 300 + (index * 100)),
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          builder: (context, value, child) {
-                            return Opacity(
-                              opacity: value,
-                              child: Transform.translate(
-                                offset: Offset(0, 20 * (1 - value)),
-                                child: child,
-                              ),
-                            );
-                          },
+                        // Card for each team
+                        return Material(
                           child: CustomCard(
                             margin: const EdgeInsets.only(
                               bottom: AppSpacing.sm,
                             ),
-                            onTap: () {
-                              // Could navigate to team details page
-                            },
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusMd,
+                                // Header row with team info and edit button
+                                Row(
+                                  children: [
+                                    Container(
+                                      width: 56,
+                                      height: 56,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusMd,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        team.icon != null
+                                            ? Icons.calendar_today
+                                            : Icons.group,
+                                        color: AppColors.primary,
+                                        size: 28,
+                                      ),
                                     ),
-                                  ),
-                                  child: Icon(
-                                    team.icon != null
-                                        ? Icons.calendar_today
-                                        : Icons.group,
-                                    color: AppColors.primary,
-                                    size: 28,
-                                  ),
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(team.name, style: AppTextStyles.h5),
-                                      const SizedBox(height: AppSpacing.xxs),
-                                      Row(
+                                    const SizedBox(width: AppSpacing.md),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Icon(
-                                            Icons.people,
-                                            size: 16,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                          const SizedBox(width: AppSpacing.xxs),
-                                          Text(
-                                            '${team.membersCount} members',
-                                            style: AppTextStyles.bodySmall,
-                                          ),
+                                          Text(team.name, style: AppTextStyles.h5),
+                                          const SizedBox(height: AppSpacing.xxs),
+                                          if (team.description != null && team.description!.isNotEmpty)
+                                            Text(
+                                              team.description!,
+                                              style: AppTextStyles.bodySmall.copyWith(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                         ],
                                       ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    // Show edit button only if user is team owner
+                                    if (_isUserTeamOwner(team))
+                                      // Edit team button
+                                      IconButton(
+                                        onPressed: () {
+                                          Navigator.push(context, MaterialPageRoute(builder: (context) => EditTeamPage(teamId: teamId),
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.edit),
+                                        color: AppColors.primary,
+                                        tooltip: 'Edit team',
+                                      ),
+                                      // Invite a member 
+                                      IconButton(
+                                        onPressed: () {
+                                          // Magically generate QR code ( WIP )
+                                        },
+                                        icon: const Icon(Icons.add),
+                                        color: AppColors.primary,
+                                        tooltip: 'Invite member',
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                // Members list on click
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          if (isExpanded) {
+                                            expandedTeams.remove(team.id);
+                                          } else {
+                                            expandedTeams.add(team.id);
+                                          }
+                                        });
+                                      },
+                                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: AppSpacing.sm,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              isExpanded
+                                                  ? Icons.expand_less
+                                                  : Icons.expand_more,
+                                              color: AppColors.primary,
+                                              size: 24,
+                                            ),
+                                            const SizedBox(width: AppSpacing.xs),
+                                            Icon(
+                                              Icons.people,
+                                              size: 16,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                            const SizedBox(width: AppSpacing.xs),
+                                            Text(
+                                              '${team.membersCount} members',
+                                              style: AppTextStyles.bodySmall.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    // Expanded members list
+                                    if (isExpanded && team.members != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: AppSpacing.sm,
+                                          left: AppSpacing.md,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: team.members!
+                                              .map((member) {
+                                                final memberId = member['id'] as int;
+                                                final memberName = member['name'] as String;
+                                                final isOwner = memberId == team.ownerId;
+                                                return Padding(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    vertical: AppSpacing.xs,
+                                                  ),
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: isOwner
+                                                          ? AppColors.primary.withValues(alpha: 0.05)
+                                                          : Colors.transparent,
+                                                      borderRadius: BorderRadius.circular(
+                                                        AppSpacing.radiusSm,
+                                                      ),
+                                                      border: isOwner
+                                                          ? Border.all(
+                                                              color: AppColors.primary.withValues(alpha: 0.2),
+                                                            )
+                                                          : null,
+                                                    ),
+                                                    padding: const EdgeInsets.symmetric(
+                                                      horizontal: AppSpacing.sm,
+                                                      vertical: AppSpacing.xs,
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.person,
+                                                          size: 16,
+                                                          color: isOwner
+                                                              ? AppColors.primary
+                                                              : AppColors.textSecondary,
+                                                        ),
+                                                        const SizedBox(width: AppSpacing.xs),
+                                                        Expanded(
+                                                          child: Text(
+                                                            memberName,
+                                                            style: AppTextStyles.bodySmall.copyWith(
+                                                              color: isOwner
+                                                                  ? AppColors.primary
+                                                                  : AppColors.textPrimary,
+                                                              fontWeight: isOwner
+                                                                  ? FontWeight.w600
+                                                                  : FontWeight.normal,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        if (isOwner)
+                                                          Chip(
+                                                            label: const Text(
+                                                              'Team Owner',
+                                                              style: TextStyle(
+                                                                fontSize: 12,
+                                                                fontWeight: FontWeight.w600,
+                                                              ),
+                                                            ),
+                                                            backgroundColor:
+                                                                AppColors.primary.withValues(alpha: 0.2),
+                                                            labelPadding: const EdgeInsets.symmetric(
+                                                              horizontal: AppSpacing.xs,
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              })
+                                              .toList(),
+                                          ),
+                                        ),
                                     ],
                                   ),
-                                ),
-                                const SizedBox(width: AppSpacing.sm),
-                                // Show edit button only if user is team owner
-                                if (_isUserTeamOwner(team))
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            EditTeamPage(teamId: teamId),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(Icons.edit),
-                                  color: AppColors.primary,
-                                  tooltip: 'Edit team',
-                                ),
-
                               ],
                             ),
                           ),

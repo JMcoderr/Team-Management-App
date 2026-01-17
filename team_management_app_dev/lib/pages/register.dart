@@ -79,7 +79,7 @@ class _RegisterState extends State<Register> {
             end: Alignment.bottomRight,
             colors: [
               AppColors.accent,
-              AppColors.accent.withOpacity(0.8),
+              AppColors.accent.withValues(alpha: 0.8),
               AppColors.primary,
             ],
           ),
@@ -119,7 +119,7 @@ class _RegisterState extends State<Register> {
                   Text(
                     'Join us to manage your teams',
                     style: AppTextStyles.body.copyWith(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxl),
