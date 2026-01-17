@@ -1,44 +1,47 @@
 import 'package:dio/dio.dart';
 
-// handling http requests to backend
+// ApiService handles all HTTP requests to backend
+// uses Dio for better error handling and request logging
 class ApiService {
   final Dio _dio;
 
-  static const String baseUrl = 'https://team-managment-api.dendrowen.com/api/v2';
+  static const String baseUrl =
+      'https://team-managment-api.dendrowen.com/api/v2';
 
-  // dio setup - no longer singleton to match Jay's approach
-  ApiService() : _dio = Dio(BaseOptions(
-    baseUrl: baseUrl,
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-  )) {
-    // Add interceptor to log requests/responses for debugging
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      error: true,
-    ));
+  // initializes Dio with default settings for all requests
+  ApiService()
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: baseUrl,
+          connectTimeout: const Duration(seconds: 10), // fail if no response
+          receiveTimeout: const Duration(seconds: 10),
+          headers: {
+            'Content-Type': 'application/json', // sending JSON
+            'Accept': 'application/json', // expecting JSON back
+          },
+        ),
+      ) {
+    // logs all requests and responses for debugging
+    _dio.interceptors.add(
+      LogInterceptor(requestBody: true, responseBody: true, error: true),
+    );
   }
 
-  // auth token storage - kept for consistency with Jay's approach
-  // ignore: unused_field
   String? _authToken;
 
+  // adds JWT token to all future requests, called after login to authenticate API calls
   void setAuthToken(String token) {
     _authToken = token;
     _dio.options.headers['Authorization'] = 'Bearer $token';
   }
 
+  // removes token from requests
   void clearAuthToken() {
     _authToken = null;
     _dio.options.headers.remove('Authorization');
   }
 
-  // Get request fetch data
+  // GET request fetches data from server, is used for reading teams, events, etc
   Future<Response> get(String endpoint) async {
     try {
       return await _dio.get(endpoint);
@@ -47,7 +50,7 @@ class ApiService {
     }
   }
 
-  // Post request create new data
+  // POST request sends new data to server used for creating teams, events, etc
   Future<Response> post(String endpoint, {dynamic data}) async {
     try {
       return await _dio.post(endpoint, data: data);
@@ -56,7 +59,8 @@ class ApiService {
     }
   }
 
-  // put request
+  // PUT request updates existing data on server used for editing teams, events, etc
+
   Future<Response> put(String endpoint, {dynamic data}) async {
     try {
       return await _dio.put(endpoint, data: data);
@@ -65,7 +69,7 @@ class ApiService {
     }
   }
 
-  // Delete request - remove data
+  // DELETE request - removes data from server used for deleting teams, events, etc
   Future<Response> delete(String endpoint) async {
     try {
       return await _dio.delete(endpoint);
@@ -74,18 +78,18 @@ class ApiService {
     }
   }
 
-  // handling errors
+  // converts Dio errors to readable messages for user
   String _handleError(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
         return 'Connection timeout - Check your internet!';
-      
+
       case DioExceptionType.sendTimeout:
         return 'Send timeout - Taking too long to send data';
-      
+
       case DioExceptionType.receiveTimeout:
         return 'Receive timeout - Server is taking too long to respond';
-      
+
       case DioExceptionType.badResponse:
         // Server responded but with error (404, 500, etc.)
         final statusCode = error.response?.statusCode;
@@ -103,10 +107,10 @@ class ApiService {
           default:
             return 'Error: ${error.response?.statusMessage ?? 'Unknown error'}';
         }
-      
+
       case DioExceptionType.cancel:
         return 'Request cancelled';
-      
+
       default:
         return 'Network error - Check your connection!';
     }

@@ -6,7 +6,7 @@ import '../utils/constants.dart';
 import '../widgets/custom_widgets.dart';
 import '../utils/date_formatter.dart';
 
-// planning routes to event locations
+// RouteplannerPage shows event locations with navigation links
 class RouteplannerPage extends ConsumerStatefulWidget {
   const RouteplannerPage({Key? key}) : super(key: key);
 
@@ -15,6 +15,7 @@ class RouteplannerPage extends ConsumerStatefulWidget {
 }
 
 class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
+  // stores search query for filtering locations
   String searchQuery = '';
 
   @override
@@ -30,110 +31,113 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(
-        children: [
-          // search bar
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.grey[100],
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Search locations...',
-                prefixIcon: const Icon(Icons.search),
-                filled: true,
-                fillColor: Colors.white,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value.toLowerCase();
-                });
-              },
-            ),
-          ),
-
-          // event locations list
-          Expanded(
-            child: upcomingEvents.when(
-              loading: () => ListView.builder(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                itemCount: 3,
-                itemBuilder: (context, index) => const CardSkeleton(),
-              ),
-              error: (err, stack) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.xl),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline, size: 80, color: AppColors.error),
-                      const SizedBox(height: AppSpacing.lg),
-                      Text(
-                        'Error loading events',
-                        style: AppTextStyles.h4,
-                      ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Text(
-                        err.toString(),
-                        style: AppTextStyles.bodySmall,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+            children: [
+              // search bar
+              Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.grey[100],
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Search locations...',
+                    prefixIcon: const Icon(Icons.search),
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
-                ),
-              ),
-              data: (events) {
-                // Only show events with both Google Maps links
-                final eventsWithLinks = events.where((event) {
-                  return event.googleMapsLink != null && 
-                         event.googleMapsLink!.isNotEmpty &&
-                         event.directionsLink != null && 
-                         event.directionsLink!.isNotEmpty;
-                }).toList();
-                
-                // filtering by search
-                final filteredEvents = eventsWithLinks.where((event) {
-                  return event.title.toLowerCase().contains(searchQuery) ||
-                      event.location.toLowerCase().contains(searchQuery);
-                }).toList();
-                
-                // Sort by date and time (earliest first)
-                filteredEvents.sort((a, b) {
-                  int dateComparison = a.date.compareTo(b.date);
-                  if (dateComparison != 0) return dateComparison;
-                  return a.time.compareTo(b.time);
-                });
-
-                if (filteredEvents.isEmpty) {
-                  return EmptyState(
-                    icon: Icons.map_outlined,
-                    title: searchQuery.isEmpty ? 'No upcoming events' : 'No events found',
-                    message: searchQuery.isEmpty
-                        ? 'Create upcoming events to plan routes to their locations.'
-                        : 'No events found matching "$searchQuery".',
-                  );
-                }
-
-                return RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(upcomingEventsProvider);
+                  onChanged: (value) {
+                    setState(() {
+                      searchQuery = value.toLowerCase();
+                    });
                   },
-                  color: AppColors.primary,
-                  child: ListView.builder(
+                ),
+              ),
+
+              // event locations list
+              Expanded(
+                child: upcomingEvents.when(
+                  loading: () => ListView.builder(
                     padding: const EdgeInsets.all(AppSpacing.md),
-                    itemCount: filteredEvents.length,
-                    itemBuilder: (context, index) {
-                      final event = filteredEvents[index];
-                      return _buildLocationCard(event);
-                    },
+                    itemCount: 3,
+                    itemBuilder: (context, index) => const CardSkeleton(),
                   ),
-                );
-              },
-            ),
-          ),
-        ],
+                  error: (err, stack) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.xl),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 80,
+                            color: AppColors.error,
+                          ),
+                          const SizedBox(height: AppSpacing.lg),
+                          Text('Error loading events', style: AppTextStyles.h4),
+                          const SizedBox(height: AppSpacing.sm),
+                          Text(
+                            err.toString(),
+                            style: AppTextStyles.bodySmall,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  data: (events) {
+                    // Only show events with both Google Maps links
+                    final eventsWithLinks = events.where((event) {
+                      return event.googleMapsLink != null &&
+                          event.googleMapsLink!.isNotEmpty &&
+                          event.directionsLink != null &&
+                          event.directionsLink!.isNotEmpty;
+                    }).toList();
+
+                    // filtering by search
+                    final filteredEvents = eventsWithLinks.where((event) {
+                      return event.title.toLowerCase().contains(searchQuery) ||
+                          event.location.toLowerCase().contains(searchQuery);
+                    }).toList();
+
+                    // Sort by date and time (earliest first)
+                    filteredEvents.sort((a, b) {
+                      int dateComparison = a.date.compareTo(b.date);
+                      if (dateComparison != 0) return dateComparison;
+                      return a.time.compareTo(b.time);
+                    });
+
+                    if (filteredEvents.isEmpty) {
+                      return EmptyState(
+                        icon: Icons.map_outlined,
+                        title: searchQuery.isEmpty
+                            ? 'No upcoming events'
+                            : 'No events found',
+                        message: searchQuery.isEmpty
+                            ? 'Create upcoming events to plan routes to their locations.'
+                            : 'No events found matching "$searchQuery".',
+                      );
+                    }
+
+                    return RefreshIndicator(
+                      onRefresh: () async {
+                        ref.invalidate(upcomingEventsProvider);
+                      },
+                      color: AppColors.primary,
+                      child: ListView.builder(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        itemCount: filteredEvents.length,
+                        itemBuilder: (context, index) {
+                          final event = filteredEvents[index];
+                          return _buildLocationCard(event);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -168,10 +172,7 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      event.title,
-                      style: AppTextStyles.h5,
-                    ),
+                    Text(event.title, style: AppTextStyles.h5),
                     const SizedBox(height: AppSpacing.xxs),
                     Text(
                       DateFormatter.formatRelativeDate(event.date),
@@ -192,7 +193,9 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
               Expanded(
                 child: Text(
                   event.location,
-                  style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w500),
+                  style: AppTextStyles.body.copyWith(
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
             ],
@@ -202,10 +205,7 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
             children: [
               Icon(Icons.access_time, size: 20, color: AppColors.primary),
               const SizedBox(width: AppSpacing.xs),
-              Text(
-                event.time,
-                style: AppTextStyles.body,
-              ),
+              Text(event.time, style: AppTextStyles.body),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -222,7 +222,9 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm,
+                    ),
                   ),
                 ),
               ),
@@ -236,7 +238,9 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.sm,
+                    ),
                   ),
                 ),
               ),
@@ -250,21 +254,23 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
   // opening google maps for location
   Future<void> _openGoogleMaps(event) async {
     String urlString;
-    
+
     // Use stored Google Maps link if available
     if (event.googleMapsLink != null && event.googleMapsLink!.isNotEmpty) {
       urlString = event.googleMapsLink!;
     }
     // Otherwise use coordinates if available for more accurate location
     else if (event.latitude != null && event.longitude != null) {
-      urlString = 'https://www.google.com/maps/search/?api=1&query=${event.latitude},${event.longitude}';
+      urlString =
+          'https://www.google.com/maps/search/?api=1&query=${event.latitude},${event.longitude}';
     } else {
       final encodedLocation = Uri.encodeComponent(event.location);
-      urlString = 'https://www.google.com/maps/search/?api=1&query=$encodedLocation';
+      urlString =
+          'https://www.google.com/maps/search/?api=1&query=$encodedLocation';
     }
-    
+
     final url = Uri.parse(urlString);
-    
+
     if (await canLaunchUrl(url)) {
       await launchUrl(url, mode: LaunchMode.externalApplication);
     } else {
@@ -282,21 +288,23 @@ class _RouteplannerPageState extends ConsumerState<RouteplannerPage> {
   // opening directions to location
   Future<void> _openDirections(event) async {
     String urlString;
-    
+
     // Use stored directions link if available
     if (event.directionsLink != null && event.directionsLink!.isNotEmpty) {
       urlString = event.directionsLink!;
     }
     // Otherwise use coordinates if available for more accurate directions
     else if (event.latitude != null && event.longitude != null) {
-      urlString = 'https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}';
+      urlString =
+          'https://www.google.com/maps/dir/?api=1&destination=${event.latitude},${event.longitude}';
     } else {
       final encodedLocation = Uri.encodeComponent(event.location);
-      urlString = 'https://www.google.com/maps/dir/?api=1&destination=$encodedLocation';
+      urlString =
+          'https://www.google.com/maps/dir/?api=1&destination=$encodedLocation';
     }
-    
+
     final directionsUrl = Uri.parse(urlString);
-    
+
     if (await canLaunchUrl(directionsUrl)) {
       await launchUrl(directionsUrl, mode: LaunchMode.externalApplication);
     } else {

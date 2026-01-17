@@ -3,60 +3,63 @@ import '../data/models/event.dart';
 import '../data/repositories/event_repository.dart';
 import '../data/services/api_service.dart';
 
-// api service provider
+// provides ApiService instance for HTTP requests
 final apiServiceProvider = Provider<ApiService>((ref) {
   return ApiService();
 });
 
-// event repository provider
+// provides EventRepository with API service dependency
 final eventRepositoryProvider = Provider<EventRepository>((ref) {
   final apiService = ref.watch(apiServiceProvider);
   return EventRepository(apiService);
 });
 
-// all events provider
+// fetches all events from repository
 final eventsProvider = FutureProvider<List<Event>>((ref) async {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.getEvents();
 });
 
-// upcoming events provider
+// fetches only upcoming events 
 final upcomingEventsProvider = FutureProvider<List<Event>>((ref) async {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.getUpcomingEvents();
 });
 
-// past events provider
+// fetches only past events 
 final pastEventsProvider = FutureProvider<List<Event>>((ref) async {
   final repository = ref.watch(eventRepositoryProvider);
   return repository.getPastEvents();
 });
 
-// search query provider
+// manages search query string state
 final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(() {
   return SearchQueryNotifier();
 });
 
+// notifier holds current search text
 class SearchQueryNotifier extends Notifier<String> {
   @override
   String build() => '';
-  
+
   void update(String query) => state = query;
 }
 
-// filter tab provider
-final selectedFilterProvider = NotifierProvider<SelectedFilterNotifier, int>(() {
-  return SelectedFilterNotifier();
-});
+// tracks selected filter tab 
+final selectedFilterProvider = NotifierProvider<SelectedFilterNotifier, int>(
+  () {
+    return SelectedFilterNotifier();
+  },
+);
 
+// notifier holds active filter tab index
 class SelectedFilterNotifier extends Notifier<int> {
   @override
-  int build() => 1;  // Default to upcoming (1 instead of 0)
-  
+  int build() => 1; 
   void update(int index) => state = index;
 }
 
-// filtered events provider
+// combines events with search and filter settings
 final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
   final eventsAsync = ref.watch(eventsProvider);
   final searchQuery = ref.watch(searchQueryProvider);
@@ -64,7 +67,7 @@ final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
 
   return eventsAsync.when(
     data: (events) {
-      // Apply filter (All/Upcoming/Past)
+      // applies tab filter first
       var filtered = events;
       if (selectedFilter == 1) {
         filtered = events.where((e) => e.type == 'upcoming').toList();
@@ -72,39 +75,38 @@ final filteredEventsProvider = Provider<AsyncValue<List<Event>>>((ref) {
         filtered = events.where((e) => e.type == 'past').toList();
       }
 
-      // Apply search if there's a query
+      // applies search filter to title and location
       if (searchQuery.isNotEmpty) {
         final query = searchQuery.toLowerCase();
         filtered = filtered.where((event) {
           return event.title.toLowerCase().contains(query) ||
-                 event.location.toLowerCase().contains(query);
+              event.location.toLowerCase().contains(query);
         }).toList();
       }
 
-      // sort events by date and time - future events first (blue), then past events (grey)
+      // sorts events to show upcoming first, then past
       filtered.sort((a, b) {
-        // check if event is in future or past
+        // determines event timing based on type
         bool aIsFuture = a.type == 'upcoming';
         bool bIsFuture = b.type == 'upcoming';
-        
-        // if one is future and other is past, future comes first
+
+        // prioritizes upcoming over past events
         if (aIsFuture && !bIsFuture) return -1;
         if (!aIsFuture && bIsFuture) return 1;
-        
-        // if both same type, sort by date (newest first for future, oldest first for past)
+
+        // sorts within each category by date and time
         if (aIsFuture) {
-          // Compare dates first
           int dateComparison = a.date.compareTo(b.date);
-          if (dateComparison != 0) return dateComparison; // upcoming events: soonest first
-          
-          // If same date, sort by time (earliest first)
+          if (dateComparison != 0) return dateComparison; 
+
+          // same date: sorts by time (earliest first)
           return a.time.compareTo(b.time);
         } else {
-          // Compare dates first
+          // compares dates for past events
           int dateComparison = b.date.compareTo(a.date);
-          if (dateComparison != 0) return dateComparison; // past events: most recent first
-          
-          // If same date, sort by time (latest first for past events)
+          if (dateComparison != 0)
+            return dateComparison;
+
           return b.time.compareTo(a.time);
         }
       });

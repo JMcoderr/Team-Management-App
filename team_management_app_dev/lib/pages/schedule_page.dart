@@ -7,7 +7,7 @@ import '../data/models/team.dart';
 import '../data/services/teams_service.dart';
 import '../data/services/auth_service.dart';
 
-// showing your schedule as a week planner
+// SchedulePage displays events in weekly calendar format
 class SchedulePage extends ConsumerStatefulWidget {
   const SchedulePage({Key? key}) : super(key: key);
 
@@ -16,34 +16,38 @@ class SchedulePage extends ConsumerStatefulWidget {
 }
 
 class _SchedulePageState extends ConsumerState<SchedulePage> {
-  String? selectedTeam; // which team is selected in dropdown (null = all teams)
-  DateTime selectedWeek = DateTime.now(); // current week we're viewing
-  List<Team> userTeams = []; // list of teams where user is member
+  String? selectedTeam;
+
+  DateTime selectedWeek = DateTime.now(); // current week being displayed in calendar
+
+  List<Team> userTeams = []; // teams where user is member or owner
+
   bool loadingTeams = true;
 
   @override
   void initState() {
     super.initState();
-    // load teams when page opens
     _loadUserTeams();
   }
 
-  // fetch teams from api
+  // fetches and filters teams from API
   Future<void> _loadUserTeams() async {
     try {
       final auth = AuthService();
       final token = auth.token;
       final userId = auth.userId;
-      
-      // get all teams from api
+
+      // retrieves all teams from API
       final teamsService = TeamsService();
       final allTeams = await teamsService.fetchTeams(token);
-      
-      // filter only teams where user is member or owner
-      final filtered = allTeams.where((team) => 
-        team.ownerId == userId || team.memberIds.contains(userId)
-      ).toList();
-      
+
+      // filters to user's teams for relevant filtering
+      final filtered = allTeams
+          .where(
+            (team) => team.ownerId == userId || team.memberIds.contains(userId),
+          )
+          .toList();
+
       setState(() {
         userTeams = filtered;
         loadingTeams = false;
@@ -67,129 +71,146 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1200),
           child: Column(
-        children: [
-          // filter by team dropdown
-          Container(
-            padding: const EdgeInsets.all(16.0),
-            color: Colors.grey[100],
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: loadingTeams
-                ? const Center(child: CircularProgressIndicator())
-                : DropdownButton<String>(
-                value: selectedTeam,
-                isExpanded: true,
-                hint: const Text('All teams'),
-                underline: Container(),
-                icon: const Icon(Icons.arrow_drop_down),
-                items: [
-                  // all teams option
-                  const DropdownMenuItem<String>(
-                    value: null,
-                    child: Row(
-                      children: [
-                        Icon(Icons.group, size: 18, color: Colors.blue),
-                        SizedBox(width: 8),
-                        Text('All teams'),
-                      ],
-                    ),
+            children: [
+              // filter by team dropdown
+              Container(
+                padding: const EdgeInsets.all(16.0),
+                color: Colors.grey[100],
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  // real teams from api
-                  ...userTeams.map((team) {
-                    return DropdownMenuItem<String>(
-                      value: team.name,
-                      child: Row(
-                        children: [
-                          Icon(Icons.group, size: 18, color: Colors.green),
-                          SizedBox(width: 8),
-                          Text(team.name),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    selectedTeam = value;
-                  });
-                },
+                  child: loadingTeams
+                      ? const Center(child: CircularProgressIndicator())
+                      : DropdownButton<String>(
+                          value: selectedTeam,
+                          isExpanded: true,
+                          hint: const Text('All teams'),
+                          underline: Container(),
+                          icon: const Icon(Icons.arrow_drop_down),
+                          items: [
+                            // all teams option
+                            const DropdownMenuItem<String>(
+                              value: null,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.group,
+                                    size: 18,
+                                    color: Colors.blue,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text('All teams'),
+                                ],
+                              ),
+                            ),
+                            // real teams from api
+                            ...userTeams.map((team) {
+                              return DropdownMenuItem<String>(
+                                value: team.name,
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.group,
+                                      size: 18,
+                                      color: Colors.green,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(team.name),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              selectedTeam = value;
+                            });
+                          },
+                        ),
+                ),
               ),
-            ),
-          ),
 
-          // week navigation
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () {
-                    setState(() {
-                      selectedWeek = selectedWeek.subtract(const Duration(days: 7));
-                    });
-                  },
+              // week navigation
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
                 ),
-                Text(
-                  _getWeekRange(),
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.chevron_left),
+                      onPressed: () {
+                        setState(() {
+                          selectedWeek = selectedWeek.subtract(
+                            const Duration(days: 7),
+                          );
+                        });
+                      },
+                    ),
+                    Text(
+                      _getWeekRange(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.chevron_right),
+                      onPressed: () {
+                        setState(() {
+                          selectedWeek = selectedWeek.add(
+                            const Duration(days: 7),
+                          );
+                        });
+                      },
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: () {
-                    setState(() {
-                      selectedWeek = selectedWeek.add(const Duration(days: 7));
-                    });
-                  },
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          // weekly planner view
-          Expanded(
-            child: _buildWeeklyPlanner(),
-          ),
-        ],
+              // weekly planner view
+              Expanded(child: _buildWeeklyPlanner()),
+            ],
           ),
         ),
       ),
     );
   }
 
-  // getting week range text
+  // formats week range as readable string
   String _getWeekRange() {
     final startOfWeek = _getStartOfWeek(selectedWeek);
     final endOfWeek = startOfWeek.add(const Duration(days: 6));
     return '${DateFormat('d MMM').format(startOfWeek)} - ${DateFormat('d MMM').format(endOfWeek)}';
   }
 
-  // getting start of week (monday)
+  // calculates Monday of current week
   DateTime _getStartOfWeek(DateTime date) {
     final daysFromMonday = date.weekday - 1;
     return date.subtract(Duration(days: daysFromMonday));
   }
 
-  // building weekly planner view
+  // builds weekly calendar view with events grouped by day
   Widget _buildWeeklyPlanner() {
     final eventsData = ref.watch(eventsProvider);
 
     return eventsData.when(
-      loading: () => const Center(
-        child: CircularProgressIndicator(),
-      ),
+      loading: () => const Center(child: CircularProgressIndicator()),
       error: (error, stack) => Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
             const SizedBox(height: 16),
-            Text('Something went wrong...', style: TextStyle(color: Colors.grey[600])),
+            Text(
+              'Something went wrong...',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () => ref.invalidate(eventsProvider),
@@ -202,11 +223,16 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
         // filter by team
         final filteredEvents = selectedTeam == null
             ? events
-            : events.where((event) => true).toList(); // TODO: filter by team when available
+            : events
+                  .where((event) => true)
+                  .toList();
 
         // group events by day of week
         final startOfWeek = _getStartOfWeek(selectedWeek);
-        final weekDays = List.generate(7, (i) => startOfWeek.add(Duration(days: i)));
+        final weekDays = List.generate(
+          7,
+          (i) => startOfWeek.add(Duration(days: i)),
+        );
 
         return RefreshIndicator(
           onRefresh: () async {
@@ -222,7 +248,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                     event.date.month == day.month &&
                     event.date.day == day.day;
               }).toList();
-              
+
               // Sort events by time (earliest first)
               dayEvents.sort((a, b) => a.time.compareTo(b.time));
 
@@ -234,9 +260,10 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
     );
   }
 
-  // building each day section
+  // creates day card showing date and events for that day
   Widget _buildDaySection(DateTime day, List events) {
-    final isToday = DateTime.now().day == day.day &&
+    final isToday =
+        DateTime.now().day == day.day &&
         DateTime.now().month == day.month &&
         DateTime.now().year == day.year;
 
@@ -266,7 +293,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
             child: Row(
               children: [
                 Text(
-                  DateFormat('EEEE').format(day), // day name
+                  DateFormat('EEEE').format(day),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -275,16 +302,16 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  DateFormat('d MMM').format(day), // date
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  DateFormat('d MMM').format(day), 
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
                 const Spacer(),
                 if (events.isNotEmpty)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.blue,
                       borderRadius: BorderRadius.circular(12),
@@ -362,19 +389,33 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                Icon(Icons.access_time, size: 14, color: Colors.grey[600]),
+                                Icon(
+                                  Icons.access_time,
+                                  size: 14,
+                                  color: Colors.grey[600],
+                                ),
                                 const SizedBox(width: 4),
                                 Text(
                                   event.time,
-                                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
                                 ),
                                 const SizedBox(width: 12),
-                                Icon(Icons.location_on, size: 14, color: Colors.grey[600]),
+                                Icon(
+                                  Icons.location_on,
+                                  size: 14,
+                                  color: Colors.grey[600],
+                                ),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
                                     event.location,
-                                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey[600],
+                                    ),
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
@@ -404,7 +445,10 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             if (event.description.isNotEmpty) ...[
-              const Text('Description:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const Text(
+                'Description:',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 4),
               Text(event.description),
               const SizedBox(height: 16),
@@ -490,7 +534,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
       final repository = ref.read(eventRepositoryProvider);
       await repository.deleteEvent(id);
       ref.invalidate(eventsProvider);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -546,9 +590,11 @@ class _EditEventDialogState extends State<_EditEventDialog> {
     // pre-filling with current values
     titleController = TextEditingController(text: widget.event.title);
     locationController = TextEditingController(text: widget.event.location);
-    descriptionController = TextEditingController(text: widget.event.description);
+    descriptionController = TextEditingController(
+      text: widget.event.description,
+    );
     selectedDate = widget.event.date;
-    
+
     // parsing time
     final timeParts = widget.event.time.split(':');
     selectedTime = TimeOfDay(
@@ -660,7 +706,8 @@ class _EditEventDialogState extends State<_EditEventDialog> {
         location: locationController.text,
         description: descriptionController.text,
         date: selectedDate,
-        time: '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+        time:
+            '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
       );
 
       final repository = widget.ref.read(eventRepositoryProvider);

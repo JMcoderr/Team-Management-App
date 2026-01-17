@@ -9,7 +9,7 @@ import '../utils/constants.dart';
 import '../widgets/custom_widgets.dart';
 import '../utils/date_formatter.dart';
 
-// showing all events with filter options
+// EventsPage displays all events with filtering options
 class EventsPage extends ConsumerStatefulWidget {
   const EventsPage({Key? key}) : super(key: key);
 
@@ -18,34 +18,35 @@ class EventsPage extends ConsumerStatefulWidget {
 }
 
 class _EventsPageState extends ConsumerState<EventsPage> {
-  String? selectedTeamFilter; // filter by team
-  List<Team> userTeams = []; // teams where user is member
+  String? selectedTeamFilter;
+  List<Team> userTeams = [];
   bool loadingTeams = true;
-  String dateRangeFilter = 'all'; // all, today, week, month
+  String dateRangeFilter = 'all'; // filters events by date range (all, today, week, month)
 
   @override
   void initState() {
     super.initState();
-    // load teams when page opens
-    _loadUserTeams();
+    _loadUserTeams(); // fetches teams on page load for dropdown filter
   }
 
-  // get teams from api
+  // retrieves teams from API and filters to user's teams
   Future<void> _loadUserTeams() async {
     try {
       final auth = AuthService();
       final token = auth.token;
       final userId = auth.userId;
-      
-      // fetch all teams
+
+      // fetches all teams from API
       final teamsService = TeamsService();
       final allTeams = await teamsService.fetchTeams(token);
-      
-      // only show teams where user is owner or member
-      final filtered = allTeams.where((team) => 
-        team.ownerId == userId || team.memberIds.contains(userId)
-      ).toList();
-      
+
+      // filters to prevents showing unrelated teams in dropdown
+      final filtered = allTeams
+          .where(
+            (team) => team.ownerId == userId || team.memberIds.contains(userId),
+          )
+          .toList();
+
       setState(() {
         userTeams = filtered;
         loadingTeams = false;
@@ -95,54 +96,58 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                 boxShadow: AppShadows.small,
               ),
               child: loadingTeams
-                ? const Padding(
-                    padding: EdgeInsets.all(AppSpacing.sm),
-                    child: Center(
-                      child: SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                  ? const Padding(
+                      padding: EdgeInsets.all(AppSpacing.sm),
+                      child: Center(
+                        child: SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
                       ),
-                    ),
-                  )
-                : DropdownButton<String>(
-                value: selectedTeamFilter,
-                isExpanded: true,
-                hint: const Text('Filter by team'),
-                underline: Container(),
-                icon: const Icon(Icons.arrow_drop_down),
-                items: [
-                  // all teams option
-                  const DropdownMenuItem<String>(
-                    value: null,
-                    child: Row(
-                      children: [
-                        Icon(Icons.group, size: 18, color: Colors.blue),
-                        SizedBox(width: 8),
-                        Text('All teams'),
+                    )
+                  : DropdownButton<String>(
+                      value: selectedTeamFilter,
+                      isExpanded: true,
+                      hint: const Text('Filter by team'),
+                      underline: Container(),
+                      icon: const Icon(Icons.arrow_drop_down),
+                      items: [
+                        // all teams option
+                        const DropdownMenuItem<String>(
+                          value: null,
+                          child: Row(
+                            children: [
+                              Icon(Icons.group, size: 18, color: Colors.blue),
+                              SizedBox(width: 8),
+                              Text('All teams'),
+                            ],
+                          ),
+                        ),
+                        // real teams from api
+                        ...userTeams.map((team) {
+                          return DropdownMenuItem<String>(
+                            value: team.name,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.group,
+                                  size: 18,
+                                  color: Colors.green,
+                                ),
+                                SizedBox(width: 8),
+                                Text(team.name),
+                              ],
+                            ),
+                          );
+                        }).toList(),
                       ],
+                      onChanged: (value) {
+                        setState(() {
+                          selectedTeamFilter = value;
+                        });
+                      },
                     ),
-                  ),
-                  // real teams from api
-                  ...userTeams.map((team) {
-                    return DropdownMenuItem<String>(
-                      value: team.name,
-                      child: Row(
-                        children: [
-                          Icon(Icons.group, size: 18, color: Colors.green),
-                          SizedBox(width: 8),
-                          Text(team.name),
-                        ],
-                      ),
-                    );
-                  }).toList(),
-                ],
-                onChanged: (value) {
-                  setState(() {
-                    selectedTeamFilter = value;
-                  });
-                },
-              ),
             ),
           ),
 
@@ -161,7 +166,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
               },
               decoration: InputDecoration(
                 hintText: 'Search events...',
-                hintStyle: AppTextStyles.body.copyWith(color: AppColors.textHint),
+                hintStyle: AppTextStyles.body.copyWith(
+                  color: AppColors.textHint,
+                ),
                 prefixIcon: Icon(Icons.search, color: AppColors.primary),
                 filled: true,
                 fillColor: AppColors.surface,
@@ -196,7 +203,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
               children: [
                 Text(
                   'Status',
-                  style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 SingleChildScrollView(
@@ -214,7 +223,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
                 const SizedBox(height: AppSpacing.sm),
                 Text(
                   'Date Range',
-                  style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.w600),
+                  style: AppTextStyles.caption.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xs),
                 SingleChildScrollView(
@@ -236,15 +247,13 @@ class _EventsPageState extends ConsumerState<EventsPage> {
           ),
 
           // list of events
-          Expanded(
-            child: _buildEventList(),
-          ),
+          Expanded(child: _buildEventList()),
         ],
       ),
     );
   }
 
-  // creating filter buttons
+  // builds status filter chips
   Widget _buildFilterChip(String label, int index) {
     final selectedFilter = ref.watch(selectedFilterProvider);
     final bool isSelected = selectedFilter == index;
@@ -274,7 +283,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     );
   }
 
-  // date range filter chips
+  // builds date range filter chips 
   Widget _buildDateRangeChip(String label, String value) {
     final bool isSelected = dateRangeFilter == value;
 
@@ -334,7 +343,9 @@ class _EventsPageState extends ConsumerState<EventsPage> {
               const SizedBox(height: AppSpacing.sm),
               Text(
                 error.toString(),
-                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
                 textAlign: TextAlign.center,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
@@ -359,7 +370,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
         ),
       ),
 
-      // Success state 
+      // Success state
       data: (events) {
         // filter by team if selected
         var displayEvents = events;
@@ -369,7 +380,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             (team) => team.name == selectedTeamFilter,
             orElse: () => userTeams.first,
           );
-          
+
           // Filter events by teamId
           displayEvents = events.where((event) {
             return event.teamId == selectedTeam.id;
@@ -389,29 +400,27 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             return true;
           }).toList();
         }
-        
-        // Sort events by date and time (upcoming events first, sorted by date and time)
+
+        // Sort events by date and time 
         displayEvents.sort((a, b) {
           bool aIsUpcoming = a.type == 'upcoming';
           bool bIsUpcoming = b.type == 'upcoming';
-          
+
           // Upcoming events first
           if (aIsUpcoming && !bIsUpcoming) return -1;
           if (!aIsUpcoming && bIsUpcoming) return 1;
-          
-          // Within same type, sort by date (soonest first for upcoming)
+
+          // Within same type, sort by date
           if (aIsUpcoming) {
-            // Compare dates first
             int dateComparison = a.date.compareTo(b.date);
             if (dateComparison != 0) return dateComparison;
-            
+
             // If same date, sort by time (earliest first)
             return a.time.compareTo(b.time);
           } else {
-            // Compare dates first
             int dateComparison = b.date.compareTo(a.date);
             if (dateComparison != 0) return dateComparison;
-            
+
             // If same date, sort by time (latest first for past events)
             return b.time.compareTo(a.time);
           }
@@ -422,7 +431,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
           return EmptyState(
             icon: Icons.event_busy,
             title: 'No events found',
-            message: events.isEmpty 
+            message: events.isEmpty
                 ? 'Create your first event to get started!\nOrganize training sessions, matches, and meetings.'
                 : 'No events match your filters.\nTry adjusting the search or filters.',
           );
@@ -439,7 +448,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             itemCount: displayEvents.length,
             itemBuilder: (context, i) {
               final event = displayEvents[i];
-              
+
               // Fade-in animation for list items
               return TweenAnimationBuilder<double>(
                 duration: Duration(milliseconds: 200 + (i * 50)),
@@ -482,12 +491,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
               color: EventTypeHelper.getColor(event.iconType),
             ),
             const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                event.title,
-                style: AppTextStyles.h5,
-              ),
-            ),
+            Expanded(child: Text(event.title, style: AppTextStyles.h5)),
           ],
         ),
         content: Column(
@@ -497,7 +501,11 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             // date
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 16, color: AppColors.textSecondary),
+                Icon(
+                  Icons.calendar_today,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(
                   DateFormatter.formatRelativeDate(event.date),
@@ -509,7 +517,11 @@ class _EventsPageState extends ConsumerState<EventsPage> {
             // time
             Row(
               children: [
-                Icon(Icons.access_time, size: 16, color: AppColors.textSecondary),
+                Icon(
+                  Icons.access_time,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: AppSpacing.xs),
                 Text(event.time, style: AppTextStyles.body),
               ],
@@ -595,14 +607,16 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     try {
       final repository = ref.read(eventRepositoryProvider);
       await repository.deleteEvent(event.id);
-      
+
       // refresh list
       ref.invalidate(eventsProvider);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Event deleted! (Local mode - login needed to sync)'),
+            content: const Text(
+              'Event deleted! (Local mode - login needed to sync)',
+            ),
             backgroundColor: Colors.green,
             duration: const Duration(seconds: 2),
           ),
@@ -611,10 +625,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     }
@@ -632,7 +643,7 @@ class _EventsPageState extends ConsumerState<EventsPage> {
 // edit event dialog
 class _EditEventDialog extends ConsumerStatefulWidget {
   final dynamic event;
-  
+
   const _EditEventDialog({required this.event});
 
   @override
@@ -653,7 +664,9 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
     // pre-fill with existing data
     titleController = TextEditingController(text: widget.event.title);
     locationController = TextEditingController(text: widget.event.location);
-    descriptionController = TextEditingController(text: widget.event.description);
+    descriptionController = TextEditingController(
+      text: widget.event.description,
+    );
     selectedDate = widget.event.date;
     selectedTime = TimeOfDay(
       hour: widget.event.date.hour,
@@ -687,7 +700,7 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // date picker
             InkWell(
               onTap: () async {
@@ -707,11 +720,13 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
                   border: OutlineInputBorder(),
                   prefixIcon: Icon(Icons.calendar_today),
                 ),
-                child: Text('${selectedDate.day}/${selectedDate.month}/${selectedDate.year}'),
+                child: Text(
+                  '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                ),
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // time picker
             InkWell(
               onTap: () async {
@@ -733,7 +748,7 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // location
             TextField(
               controller: locationController,
@@ -744,7 +759,7 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // description
             TextField(
               controller: descriptionController,
@@ -779,9 +794,9 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
   // saving changes
   Future<void> _saveChanges() async {
     if (titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Title required')));
       return;
     }
 
@@ -789,7 +804,7 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
 
     try {
       final repository = ref.read(eventRepositoryProvider);
-      
+
       // combine date and time
       final eventDateTime = DateTime(
         selectedDate.year,
@@ -798,7 +813,7 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
         selectedTime.hour,
         selectedTime.minute,
       );
-      
+
       // create updated event
       final updatedEvent = widget.event.copyWith(
         title: titleController.text.trim(),
@@ -808,12 +823,12 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
         location: locationController.text.trim(),
         type: eventDateTime.isAfter(DateTime.now()) ? 'upcoming' : 'past',
       );
-      
+
       await repository.updateEvent(widget.event.id, updatedEvent);
-      
+
       // refresh
       ref.invalidate(eventsProvider);
-      
+
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -827,10 +842,7 @@ class _EditEventDialogState extends ConsumerState<_EditEventDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
         );
       }
     } finally {

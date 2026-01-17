@@ -3,6 +3,7 @@ import 'package:team_management_app_dev/data/services/auth_service.dart';
 import '../utils/constants.dart';
 import 'login.dart';
 
+// Register page creates new user accounts
 class Register extends StatefulWidget {
   const Register({super.key});
 
@@ -16,18 +17,20 @@ class _RegisterState extends State<Register> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  // tracks registration progress for UI feedback
   bool isLoading = false;
 
+  // creates new user account and navigates to login
   Future<void> onRegisterPressed() async {
     setState(() => isLoading = true);
 
     try {
       await authService.register(nameController.text, passwordController.text);
-
       print('Registered successfully');
 
+
       if (mounted) {
-        // Show success message
+        // confirms successful account creation
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Registration successful! Please login.'),
@@ -36,15 +39,17 @@ class _RegisterState extends State<Register> {
           ),
         );
 
-        // Small delay so user sees the message
+        // pause allows user to read success message
         await Future.delayed(const Duration(milliseconds: 500));
 
+        // redirects to login page after successful registration
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const Login()),
         );
       }
     } catch (e) {
+      // displays error if registration fails
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

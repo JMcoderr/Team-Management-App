@@ -7,7 +7,7 @@ import '../../widgets/custom_widgets.dart';
 import 'create_team_page.dart';
 import 'edit_team_page.dart';
 
-// TeamsPage shows all teams the user is part of
+// TeamsPage displays all teams the user belongs to
 class TeamsPage extends StatefulWidget {
   const TeamsPage({super.key});
 
@@ -16,16 +16,19 @@ class TeamsPage extends StatefulWidget {
 }
 
 class _TeamsPageState extends State<TeamsPage> {
+  // updated when teams are loaded or refreshed
   late Future<List<Team>> teamsFuture;
+
   final teamsService = TeamsService();
   final auth = AuthService();
 
   @override
   void initState() {
     super.initState();
-    _loadTeams();
+    _loadTeams();  // load teams when page first opens
   }
 
+  // fetches teams from API and filters
   void _loadTeams() {
     final token = auth.token;
     final loggedInUserId = auth.userId;
@@ -33,7 +36,8 @@ class _TeamsPageState extends State<TeamsPage> {
     setState(() {
       teamsFuture = teamsService.fetchTeams(token).then((teams) {
         print('Fetched ${teams.length} teams from API');
-        // Filter teams where user is owner or a member
+
+        // filters teams to only ones user can access
         final filtered = teams.where((team) {
           final isOwner = team.ownerId == loggedInUserId;
           final isMember = team.memberIds.contains(loggedInUserId);
@@ -59,11 +63,12 @@ class _TeamsPageState extends State<TeamsPage> {
         padding: const EdgeInsets.all(AppSpacing.md),
         child: Column(
           children: [
-            // Teams list
+            // FutureBuilder loads teams from API
             Expanded(
               child: FutureBuilder<List<Team>>(
                 future: teamsFuture,
                 builder: (context, snapshot) {
+                  // shows skeleton cards while loading
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return ListView.builder(
                       itemCount: 3,
@@ -71,6 +76,7 @@ class _TeamsPageState extends State<TeamsPage> {
                     );
                   }
 
+                  // shows error message if API call fails
                   if (snapshot.hasError) {
                     return Center(
                       child: Column(
@@ -98,7 +104,7 @@ class _TeamsPageState extends State<TeamsPage> {
 
                   final teams = snapshot.data!;
 
-                  // Empty state
+                  // shows empty state when user has no teams
                   if (teams.isEmpty) {
                     return EmptyState(
                       icon: Icons.group,
@@ -117,11 +123,11 @@ class _TeamsPageState extends State<TeamsPage> {
                     );
                   }
 
-                  // Display teams with animation
+                  // displays team list with pull-to-refresh
                   return RefreshIndicator(
                     onRefresh: () async {
                       _loadTeams();
-                      // Wait for the new future to complete
+                      // waits for new data before hiding refresh indicator
                       await teamsFuture;
                     },
                     color: AppColors.primary,
@@ -131,6 +137,7 @@ class _TeamsPageState extends State<TeamsPage> {
                         final team = teams[index];
                         final teamId = team.id.toString();
 
+                        // animates each team card on page load
                         return TweenAnimationBuilder<double>(
                           duration: Duration(milliseconds: 300 + (index * 100)),
                           tween: Tween(begin: 0.0, end: 1.0),
@@ -148,10 +155,11 @@ class _TeamsPageState extends State<TeamsPage> {
                               bottom: AppSpacing.sm,
                             ),
                             onTap: () {
-                              // Could navigate to team details page
+                              // placeholder for future team details navigation
                             },
                             child: Row(
                               children: [
+                                // team icon container with background
                                 Container(
                                   width: 56,
                                   height: 56,
@@ -170,6 +178,7 @@ class _TeamsPageState extends State<TeamsPage> {
                                   ),
                                 ),
                                 const SizedBox(width: AppSpacing.md),
+                                // team name and member count
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -222,7 +231,7 @@ class _TeamsPageState extends State<TeamsPage> {
 
             const SizedBox(height: AppSpacing.sm),
 
-            // Create Team button
+            // button navigates to team creation page
             AnimatedButton(
               onPressed: () {
                 Navigator.push(

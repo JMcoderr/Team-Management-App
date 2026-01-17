@@ -1,4 +1,3 @@
-// event model
 class Event {
   final int id;
   final String title;
@@ -6,13 +5,15 @@ class Event {
   final DateTime date;
   final String time;
   final String location;
-  final String type;  // 'upcoming' or 'past'
-  final String iconType;  // 'soccer', 'training', 'meeting'
-  final int? teamId;  // Added for API v2
-  final double? latitude;  // Added for API v2 location
-  final double? longitude;  // Added for API v2 location
-  final String? googleMapsLink;  // Google Maps place link
-  final String? directionsLink;  // Google Maps directions link
+  final String type; //upcoming or past determines filtering
+  final String
+  iconType; // soccer, training, meeting determines icon shown
+  final int?
+  teamId; // links event to specific team, nullable for events without team
+  final double? latitude; // location coordinates from API
+  final double? longitude;
+  final String? googleMapsLink; // place link for viewing location
+  final String? directionsLink; // directions link for navigation
 
   Event({
     required this.id,
@@ -22,7 +23,7 @@ class Event {
     required this.time,
     required this.location,
     required this.type,
-    this.iconType = 'event',
+    this.iconType = 'event', // default icon if not specified
     this.teamId,
     this.latitude,
     this.longitude,
@@ -30,15 +31,16 @@ class Event {
     this.directionsLink,
   });
 
-  // json to event object
+  // converts JSON from API to Event object
   factory Event.fromJson(Map<String, dynamic> json) {
-    // Handle API v2 format with datetimeStart and location object
+    // parse date and time from API response
     DateTime eventDate;
     String eventTime;
     String locationString;
     double? lat;
     double? lng;
-    
+
+    // handle different date formats from API
     if (json['datetimeStart'] != null) {
       eventDate = DateTime.parse(json['datetimeStart']);
       eventTime = _extractTime(json['datetimeStart']);
@@ -49,8 +51,8 @@ class Event {
       eventDate = DateTime.now();
       eventTime = '00:00';
     }
-    
-    // Handle location (can be string or object)
+
+    // location can be string or object with coordinates
     if (json['location'] is Map) {
       lat = (json['location']['latitude'] as num?)?.toDouble();
       lng = (json['location']['longitude'] as num?)?.toDouble();
@@ -58,7 +60,7 @@ class Event {
     } else {
       locationString = json['location'] ?? 'TBD';
     }
-    
+
     return Event(
       id: json['id'] ?? 0,
       title: json['title'] ?? 'Untitled Event',
@@ -76,7 +78,7 @@ class Event {
     );
   }
 
-  // event to json for api
+  // converts Event object to JSON for sending to API
   Map<String, dynamic> toJson() {
     return {
       'id': id,
@@ -89,9 +91,8 @@ class Event {
     };
   }
 
-  // HELPER METHODS
-  
-  // Helper: extract time from date string
+  // extracts time string from datetime
+  // returns HH:mm format (24-hour)
   static String _extractTime(String? dateString) {
     if (dateString == null) return '00:00';
     try {
@@ -102,33 +103,37 @@ class Event {
     }
   }
 
-  // check if event is upcoming or past
+  // compares event date with current time to determine if upcoming or past
   static String _determineType(String? dateString) {
     if (dateString == null) return 'upcoming';
     try {
       final eventDate = DateTime.parse(dateString);
       return eventDate.isAfter(DateTime.now()) ? 'upcoming' : 'past';
     } catch (e) {
-      return 'upcoming';
+      return 'upcoming'; // default to upcoming if date parsing fails
     }
   }
 
-  // getting icon based on title
+  // analyzes title to determine event type icon
   static String _determineIconType(String title) {
     final lowerTitle = title.toLowerCase();
-    
+
     if (lowerTitle.contains('training') || lowerTitle.contains('practice')) {
       return 'training';
-    } else if (lowerTitle.contains('meeting') || lowerTitle.contains('discussion')) {
+    } else if (lowerTitle.contains('meeting') ||
+        lowerTitle.contains('discussion')) {
       return 'meeting';
-    } else if (lowerTitle.contains('match') || lowerTitle.contains('game') || lowerTitle.contains('vs')) {
+    } else if (lowerTitle.contains('match') ||
+        lowerTitle.contains('game') ||
+        lowerTitle.contains('vs')) {
       return 'match';
     } else {
       return 'event';
     }
   }
 
-  // Create a copy with some fields changed
+  // creates new Event with some fields modified
+  // useful for updating events without recreating entire object
   Event copyWith({
     int? id,
     String? title,
@@ -157,7 +162,7 @@ class Event {
     );
   }
 
-  // for debugging
+  // readable string representation for debugging and logging
   @override
   String toString() {
     return 'Event{id: $id, title: $title, date: $date, location: $location}';

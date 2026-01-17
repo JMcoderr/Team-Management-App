@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:team_management_app_dev/data/services/teams_service.dart';
 
-// CreateTeamPage allows users to create a new team
+// CreateTeamPage allows users to create new teams
 class CreateTeamPage extends StatefulWidget {
   const CreateTeamPage({super.key});
 
@@ -10,33 +10,42 @@ class CreateTeamPage extends StatefulWidget {
 }
 
 class _CreateTeamPageState extends State<CreateTeamPage> {
+  // form key validates inputs before submission
   final _formKey = GlobalKey<FormState>();
+
+  // controllers store text input values
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
-  bool _isLoading = false;
 
+  bool _isLoading = false; // spinner during loading
+
+  // validates form and submits team data to API
   Future<void> _createTeam() async {
+    // stops if validation fails
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
+      // sends team data to API for creation
       await TeamsService().createTeam(
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
       );
 
       if (!mounted) return;
-      // Show success message
+      
+      // confirms successful team creation
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Team created successfully!'),
           backgroundColor: Colors.green,
         ),
       );
-      // Return true to indicate success, parent page can refresh
+      // returns true to notify parent page to refresh team list
       Navigator.pop(context, true);
     } catch (e) {
+      // displays error message if creation fails
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

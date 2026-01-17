@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:team_management_app_dev/data/services/teams_service.dart';
 
-// EditTeamPage allows team owners to edit team details
+// EditTeamPage allows team owners to modify team details
 class EditTeamPage extends StatefulWidget {
   const EditTeamPage({super.key, required this.teamId});
-
   final String teamId;
 
   @override
@@ -12,34 +11,43 @@ class EditTeamPage extends StatefulWidget {
 }
 
 class _EditTeamPageState extends State<EditTeamPage> {
-  final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>(); // validates form inputs before submission
+
+  // controllers hold updated team information
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
+
+  // tracks API request progress
   bool _isLoading = false;
 
+  // validates and submits updated team data
   Future<void> _editTeam() async {
+    // skips submission if validation fails
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
+      // updates team data via API
       await TeamsService().editTeam(
         teamId: int.parse(widget.teamId),
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
       );
 
+      // prevents UI updates if widget disposed
       if (!mounted) return;
-      // Show success message
+
+      // confirms successful update
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Team updated successfully!'),
           backgroundColor: Colors.green,
         ),
       );
-      // Return true to indicate success
       Navigator.pop(context, true);
     } catch (e) {
+      // shows error details if update fails
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

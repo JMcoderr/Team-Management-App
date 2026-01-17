@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 
-// Reusable custom widgets
-
-// Empty state widget
+// EmptyState shows message when list has no items
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String message;
   final String? buttonText;
   final VoidCallback? onButtonPressed;
-  
+
   const EmptyState({
     Key? key,
     required this.icon,
@@ -19,7 +17,7 @@ class EmptyState extends StatelessWidget {
     this.buttonText,
     this.onButtonPressed,
   }) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -28,21 +26,15 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 80,
-              color: AppColors.textHint,
-            ),
+            Icon(icon, size: 80, color: AppColors.textHint),
             const SizedBox(height: AppSpacing.lg),
-            Text(
-              title,
-              style: AppTextStyles.h4,
-              textAlign: TextAlign.center,
-            ),
+            Text(title, style: AppTextStyles.h4, textAlign: TextAlign.center),
             const SizedBox(height: AppSpacing.sm),
             Text(
               message,
-              style: AppTextStyles.body.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
             if (buttonText != null && onButtonPressed != null) ...[
@@ -71,19 +63,19 @@ class EmptyState extends StatelessWidget {
   }
 }
 
-// Loading skeleton for cards
+// LoadingSkeleton shows animated placeholder during data loading
 class LoadingSkeleton extends StatefulWidget {
   final double height;
   final double? width;
   final double borderRadius;
-  
+
   const LoadingSkeleton({
     Key? key,
     this.height = 100,
     this.width,
     this.borderRadius = AppSpacing.radiusMd,
   }) : super(key: key);
-  
+
   @override
   State<LoadingSkeleton> createState() => _LoadingSkeletonState();
 }
@@ -92,31 +84,36 @@ class _LoadingSkeletonState extends State<LoadingSkeleton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  
+
   @override
   void initState() {
     super.initState();
+    // creates repeating animation for shimmer effect
     _controller = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat();
-    
-    _animation = Tween<double>(begin: -1, end: 2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+
+    // animates gradient position from left to right
+    _animation = Tween<double>(
+      begin: -1,
+      end: 2,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
-  
+
   @override
   void dispose() {
+    // stops animation to prevent memory leaks
     _controller.dispose();
     super.dispose();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
+        // container with animated gradient creates shimmer
         return Container(
           height: widget.height,
           width: widget.width,
@@ -143,10 +140,10 @@ class _LoadingSkeletonState extends State<LoadingSkeleton>
   }
 }
 
-// Card skeleton for list items
+// CardSkeleton displays placeholder for loading list items
 class CardSkeleton extends StatelessWidget {
   const CardSkeleton({Key? key}) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -190,7 +187,7 @@ class CardSkeleton extends StatelessWidget {
   }
 }
 
-// Animated button with bounce effect
+// AnimatedButton provides interactive button with scale animation
 class AnimatedButton extends StatefulWidget {
   final Widget child;
   final VoidCallback? onPressed;
@@ -198,7 +195,7 @@ class AnimatedButton extends StatefulWidget {
   final Color? foregroundColor;
   final EdgeInsets? padding;
   final bool isLoading;
-  
+
   const AnimatedButton({
     Key? key,
     required this.child,
@@ -208,7 +205,7 @@ class AnimatedButton extends StatefulWidget {
     this.padding,
     this.isLoading = false,
   }) : super(key: key);
-  
+
   @override
   State<AnimatedButton> createState() => _AnimatedButtonState();
 }
@@ -217,37 +214,44 @@ class _AnimatedButtonState extends State<AnimatedButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  
+
   @override
   void initState() {
     super.initState();
+    // creates quick scale animation for press effect
     _controller = AnimationController(
       duration: const Duration(milliseconds: 150),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    // scales button from 100% to 95% size
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
-  
+
   @override
   void dispose() {
+    // cleans up animation controller
     _controller.dispose();
     super.dispose();
   }
-  
+
+  // triggers animation when button pressed
   void _onTapDown(TapDownDetails details) {
     _controller.forward();
   }
-  
+
+  // reverses animation when button released
   void _onTapUp(TapUpDetails details) {
     _controller.reverse();
   }
-  
+
+  // cancels animation if touch cancelled
   void _onTapCancel() {
     _controller.reverse();
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -261,7 +265,8 @@ class _AnimatedButtonState extends State<AnimatedButton>
           style: ElevatedButton.styleFrom(
             backgroundColor: widget.backgroundColor ?? AppColors.primary,
             foregroundColor: widget.foregroundColor ?? Colors.white,
-            padding: widget.padding ??
+            padding:
+                widget.padding ??
                 const EdgeInsets.symmetric(
                   horizontal: AppSpacing.lg,
                   vertical: AppSpacing.md,
@@ -287,14 +292,14 @@ class _AnimatedButtonState extends State<AnimatedButton>
   }
 }
 
-// Custom card with consistent styling
+// CustomCard provides consistent card styling throughout app
 class CustomCard extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
   final EdgeInsets? margin;
   final EdgeInsets? padding;
   final Color? color;
-  
+
   const CustomCard({
     Key? key,
     required this.child,
@@ -303,23 +308,21 @@ class CustomCard extends StatelessWidget {
     this.padding,
     this.color,
   }) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return Card(
       elevation: AppSpacing.elevationSm,
       shadowColor: Colors.black26,
-      margin: margin ??
+      margin:
+          margin ??
           const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.xs,
           ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        side: BorderSide(
-          color: AppColors.divider.withOpacity(0.5),
-          width: 1,
-        ),
+        side: BorderSide(color: AppColors.divider.withOpacity(0.5), width: 1),
       ),
       color: color ?? AppColors.surface,
       child: InkWell(
@@ -334,17 +337,17 @@ class CustomCard extends StatelessWidget {
   }
 }
 
-// Gradient header widget
+// GradientHeader creates colored header with gradient background
 class GradientHeader extends StatelessWidget {
   final String title;
   final List<Color> colors;
-  
+
   const GradientHeader({
     Key? key,
     required this.title,
     this.colors = const [AppColors.primary, AppColors.primaryDark],
   }) : super(key: key);
-  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -357,10 +360,7 @@ class GradientHeader extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
       ),
-      child: Text(
-        title,
-        style: AppTextStyles.h2.copyWith(color: Colors.white),
-      ),
+      child: Text(title, style: AppTextStyles.h2.copyWith(color: Colors.white)),
     );
   }
 }

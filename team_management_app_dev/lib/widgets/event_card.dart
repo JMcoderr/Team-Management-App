@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-// event card widget
+// EventCard displays event information in list format
 class EventCard extends StatelessWidget {
   final String title;
   final String date;
@@ -8,7 +8,7 @@ class EventCard extends StatelessWidget {
   final String location;
   final IconData icon;
   final Color iconColor;
-  final VoidCallback? onTap; // optional tap handler
+  final VoidCallback? onTap;
 
   const EventCard({
     Key? key,
@@ -17,25 +17,22 @@ class EventCard extends StatelessWidget {
     required this.time,
     required this.location,
     required this.icon,
-    this.iconColor = Colors.blue,  // Default color is blue
+    this.iconColor = Colors.blue,
     this.onTap,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      // Card = rounded box with shadow
-      elevation: 2,  // Subtle shadow (less than StatsCard)
-      margin: const EdgeInsets.only(bottom: 12),  // Space between cards
+      elevation: 2,
+      margin: const EdgeInsets.only(bottom: 12), 
       child: InkWell(
-        // InkWell = makes the card clickable with ripple effect
         onTap: onTap,
         borderRadius: BorderRadius.circular(4),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
             children: [
-              // Icon container
               Container(
                 width: 48,
                 height: 48,
@@ -43,20 +40,15 @@ class EventCard extends StatelessWidget {
                   color: iconColor,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(
-                  icon,
-                  color: Colors.white,
-                  size: 24,
-                ),
+                child: Icon(icon, color: Colors.white, size: 24),
               ),
               const SizedBox(width: 16),
 
-              // Event info
+              // event details take remaining space
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Event Title
                     Text(
                       title,
                       style: const TextStyle(
@@ -67,38 +59,58 @@ class EventCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
 
-                    // Date and time row
+                    // date and time in horizontal row
                     Row(
                       children: [
-                        // Date
-                        const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
+                        const Icon(
+                          Icons.calendar_today,
+                          size: 14,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           date,
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
                         const SizedBox(width: 16),
 
                         // Time
-                        const Icon(Icons.access_time, size: 14, color: Colors.grey),
+                        const Icon(
+                          Icons.access_time,
+                          size: 14,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           time,
-                          style: const TextStyle(fontSize: 12, color: Colors.grey),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
 
-                    // Location row
+                    // location with icon
                     Row(
                       children: [
-                        const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                        const Icon(
+                          Icons.location_on,
+                          size: 14,
+                          color: Colors.grey,
+                        ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             location,
-                            style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -108,11 +120,7 @@ class EventCard extends StatelessWidget {
                 ),
               ),
 
-              // Arrow icon
-              const Icon(
-                Icons.chevron_right,
-                color: Colors.grey,
-              ),
+              const Icon(Icons.chevron_right, color: Colors.grey),
             ],
           ),
         ),

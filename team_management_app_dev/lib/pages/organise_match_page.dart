@@ -22,38 +22,43 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
   final locationController = TextEditingController();
   final descriptionController = TextEditingController();
   final opponentController = TextEditingController();
-  
+
   // date and time stuff
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
-  
+
   // team selection
   int? selectedTeamId;
   List<Team> userTeams = [];
   bool loadingTeams = true;
-  
+
   bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    // fetches teams for match assignment
     _loadUserTeams();
   }
 
-  // get teams from api
+  // filters to teams where user has access
   Future<void> _loadUserTeams() async {
     try {
       final auth = AuthService();
       final token = auth.token;
       final userId = auth.userId;
-      
+
+      // retrieves all teams from API
       final teamsService = TeamsService();
       final allTeams = await teamsService.fetchTeams(token);
-      
-      final filtered = allTeams.where((team) => 
-        team.ownerId == userId || team.memberIds.contains(userId)
-      ).toList();
-      
+
+      // filters to user's teams
+      final filtered = allTeams
+          .where(
+            (team) => team.ownerId == userId || team.memberIds.contains(userId),
+          )
+          .toList();
+
       setState(() {
         userTeams = filtered;
         loadingTeams = false;
@@ -104,7 +109,10 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                      colors: [
+                        AppColors.primary,
+                        AppColors.primary.withOpacity(0.8),
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -117,9 +125,15 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
                         ),
-                        child: Icon(Icons.emoji_events, size: 32, color: Colors.white),
+                        child: Icon(
+                          Icons.emoji_events,
+                          size: 32,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
@@ -222,18 +236,30 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                                 InkWell(
                                   onTap: () => _pickDate(),
                                   child: Container(
-                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: AppColors.background,
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                                      border: Border.all(color: AppColors.divider),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd,
+                                      ),
+                                      border: Border.all(
+                                        color: AppColors.divider,
+                                      ),
                                     ),
                                     child: Row(
                                       children: [
-                                        Icon(Icons.calendar_today, size: 20, color: AppColors.primary),
+                                        Icon(
+                                          Icons.calendar_today,
+                                          size: 20,
+                                          color: AppColors.primary,
+                                        ),
                                         const SizedBox(width: AppSpacing.sm),
                                         Text(
-                                          DateFormat('MMM dd, yyyy').format(selectedDate),
+                                          DateFormat(
+                                            'MMM dd, yyyy',
+                                          ).format(selectedDate),
                                           style: AppTextStyles.body,
                                         ),
                                       ],
@@ -252,15 +278,25 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                                 InkWell(
                                   onTap: () => _pickTime(),
                                   child: Container(
-                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: AppColors.background,
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                                      border: Border.all(color: AppColors.divider),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd,
+                                      ),
+                                      border: Border.all(
+                                        color: AppColors.divider,
+                                      ),
                                     ),
                                     child: Row(
                                       children: [
-                                        Icon(Icons.access_time, size: 20, color: AppColors.primary),
+                                        Icon(
+                                          Icons.access_time,
+                                          size: 20,
+                                          color: AppColors.primary,
+                                        ),
                                         const SizedBox(width: AppSpacing.sm),
                                         Text(
                                           selectedTime.format(context),
@@ -324,7 +360,9 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                             ),
                             elevation: AppSpacing.elevationSm,
                           ),
@@ -354,7 +392,10 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
     );
   }
 
-  InputDecoration _buildInputDecoration({required String hint, required IconData icon}) {
+  InputDecoration _buildInputDecoration({
+    required String hint,
+    required IconData icon,
+  }) {
     return InputDecoration(
       hintText: hint,
       hintStyle: AppTextStyles.body.copyWith(color: AppColors.textHint),
@@ -441,7 +482,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
 
     try {
       final repository = ref.read(eventRepositoryProvider);
-      
+
       // combine date and time
       final eventDateTime = DateTime(
         selectedDate.year,
@@ -456,21 +497,20 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
         title: titleController.text.trim(),
         description: descriptionController.text.trim(),
         date: eventDateTime,
-        time: '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
+        time:
+            '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
         location: locationController.text.trim(),
         type: eventDateTime.isAfter(DateTime.now()) ? 'upcoming' : 'past',
-        iconType: 'soccer', // match icon
+        iconType: 'soccer', 
         teamId: selectedTeamId,
-        googleMapsLink: null, // matches don't need Google Maps links
-        directionsLink: null, // matches don't appear in routeplanner
       );
-      
+
       await repository.createEvent(newMatch);
-      
+
       // refresh
       ref.invalidate(eventsProvider);
       ref.invalidate(upcomingEventsProvider);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -479,7 +519,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
             duration: Duration(seconds: 2),
           ),
         );
-        
+
         // clear form
         titleController.clear();
         locationController.clear();

@@ -23,41 +23,44 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
   final descriptionController = TextEditingController();
   final googleMapsLinkController = TextEditingController();
   final directionsLinkController = TextEditingController();
-  
+
   // date and time variables
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
-  
+
   // team selection (for API v2)
   int? selectedTeamId;
   List<Team> userTeams = []; // teams where user is member
   bool loadingTeams = true;
-  
+
   bool isLoading = false; // to show spinner when saving
 
   @override
   void initState() {
     super.initState();
-    // load teams when page opens
+    // loads teams for dropdown selection
     _loadUserTeams();
   }
 
-  // get teams from api
+  // fetches teams from API for event assignment
+  // filters to teams where user has permissions
   Future<void> _loadUserTeams() async {
     try {
       final auth = AuthService();
       final token = auth.token;
       final userId = auth.userId;
-      
-      // fetch all teams
+
+      // retrieves all teams
       final teamsService = TeamsService();
       final allTeams = await teamsService.fetchTeams(token);
-      
-      // only show teams where user is owner or member
-      final filtered = allTeams.where((team) => 
-        team.ownerId == userId || team.memberIds.contains(userId)
-      ).toList();
-      
+
+      // filters to user's teams for event creation
+      final filtered = allTeams
+          .where(
+            (team) => team.ownerId == userId || team.memberIds.contains(userId),
+          )
+          .toList();
+
       setState(() {
         userTeams = filtered;
         loadingTeams = false;
@@ -72,7 +75,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
 
   @override
   void dispose() {
-    // cleanup when page closes 
+    // cleans up controllers to prevent memory leaks
     titleController.dispose();
     locationController.dispose();
     descriptionController.dispose();
@@ -110,7 +113,10 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                   padding: const EdgeInsets.all(AppSpacing.lg),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                      colors: [
+                        AppColors.primary,
+                        AppColors.primary.withOpacity(0.8),
+                      ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -123,9 +129,15 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
                         ),
-                        child: Icon(Icons.event_available, size: 32, color: Colors.white),
+                        child: Icon(
+                          Icons.event_available,
+                          size: 32,
+                          color: Colors.white,
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
@@ -217,18 +229,30 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                                 InkWell(
                                   onTap: () => _pickDate(context),
                                   child: Container(
-                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: AppColors.background,
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                                      border: Border.all(color: AppColors.divider),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd,
+                                      ),
+                                      border: Border.all(
+                                        color: AppColors.divider,
+                                      ),
                                     ),
                                     child: Row(
                                       children: [
-                                        Icon(Icons.calendar_today, size: 20, color: AppColors.primary),
+                                        Icon(
+                                          Icons.calendar_today,
+                                          size: 20,
+                                          color: AppColors.primary,
+                                        ),
                                         const SizedBox(width: AppSpacing.sm),
                                         Text(
-                                          DateFormat('MMM dd, yyyy').format(selectedDate),
+                                          DateFormat(
+                                            'MMM dd, yyyy',
+                                          ).format(selectedDate),
                                           style: AppTextStyles.body,
                                         ),
                                       ],
@@ -247,15 +271,25 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                                 InkWell(
                                   onTap: () => _pickTime(context),
                                   child: Container(
-                                    padding: const EdgeInsets.all(AppSpacing.md),
+                                    padding: const EdgeInsets.all(
+                                      AppSpacing.md,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: AppColors.background,
-                                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                                      border: Border.all(color: AppColors.divider),
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.radiusMd,
+                                      ),
+                                      border: Border.all(
+                                        color: AppColors.divider,
+                                      ),
                                     ),
                                     child: Row(
                                       children: [
-                                        Icon(Icons.access_time, size: 20, color: AppColors.primary),
+                                        Icon(
+                                          Icons.access_time,
+                                          size: 20,
+                                          color: AppColors.primary,
+                                        ),
                                         const SizedBox(width: AppSpacing.sm),
                                         Text(
                                           selectedTime.format(context),
@@ -340,7 +374,9 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
                             ),
                             elevation: AppSpacing.elevationSm,
                           ),
@@ -370,7 +406,10 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
     );
   }
 
-  InputDecoration _buildInputDecoration({required String hint, required IconData icon}) {
+  InputDecoration _buildInputDecoration({
+    required String hint,
+    required IconData icon,
+  }) {
     return InputDecoration(
       hintText: hint,
       hintStyle: AppTextStyles.body.copyWith(color: AppColors.textHint),
@@ -401,7 +440,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
       firstDate: DateTime.now(),
       lastDate: DateTime.now().add(const Duration(days: 365)),
     );
-    
+
     if (picked != null) {
       setState(() {
         selectedDate = picked;
@@ -415,7 +454,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
       context: context,
       initialTime: selectedTime,
     );
-    
+
     if (picked != null) {
       setState(() {
         selectedTime = picked;
@@ -427,16 +466,16 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
   Future<void> _createEvent() async {
     // check if title is empty
     if (titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a title')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a title')));
       return;
     }
-    
+
     if (locationController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a location')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter a location')));
       return;
     }
 
@@ -447,7 +486,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
     try {
       // get the repository
       final repository = ref.read(eventRepositoryProvider);
-      
+
       // combining date and time
       final eventDateTime = DateTime(
         selectedDate.year,
@@ -456,12 +495,12 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
         selectedTime.hour,
         selectedTime.minute,
       );
-      
+
       // get location coordinates if preset was selected
       double? lat;
       double? lng;
       final locationText = locationController.text.trim();
-      
+
       // create the event object
       final newEvent = Event(
         id: DateTime.now().millisecondsSinceEpoch, // temp id
@@ -471,24 +510,24 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
         time: selectedTime.format(context),
         location: locationText,
         type: eventDateTime.isAfter(DateTime.now()) ? 'upcoming' : 'past',
-        teamId: selectedTeamId ?? 1,  // Use selected team or default to 1
+        teamId: selectedTeamId ?? 1, 
         latitude: lat,
         longitude: lng,
-        googleMapsLink: googleMapsLinkController.text.trim().isEmpty 
-            ? null 
+        googleMapsLink: googleMapsLinkController.text.trim().isEmpty
+            ? null
             : googleMapsLinkController.text.trim(),
-        directionsLink: directionsLinkController.text.trim().isEmpty 
-            ? null 
+        directionsLink: directionsLinkController.text.trim().isEmpty
+            ? null
             : directionsLinkController.text.trim(),
       );
-      
+
       // save it
       await repository.createEvent(newEvent);
-      
+
       // refresh the events list and routeplanner
       ref.invalidate(eventsProvider);
       ref.invalidate(upcomingEventsProvider);
-      
+
       // show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -498,7 +537,7 @@ class _OrganisePageState extends ConsumerState<OrganisePage> {
             duration: Duration(seconds: 2),
           ),
         );
-        
+
         // clear the form
         titleController.clear();
         locationController.clear();

@@ -4,6 +4,7 @@ import '../main.dart';
 import '../utils/constants.dart';
 import 'register.dart';
 
+// Login page handles user authentication
 class Login extends StatefulWidget {
   const Login({super.key});
 
@@ -19,18 +20,18 @@ class _LoginState extends State<Login> {
 
   bool isLoading = false;
 
+  // authenticates user and navigates to dashboard
   Future<void> onLoginPressed() async {
     setState(() {
       isLoading = true;
     });
 
     try {
-      // Login stores token and userId in AuthService singleton
+      // calls API and stores JWT token for future requests
       await authService.login(nameController.text, passwordController.text);
 
-      // Navigate to dashboard
       if (mounted) {
-        // Show success message
+        // displays success feedback to user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Login successful! Welcome back!'),
@@ -39,15 +40,17 @@ class _LoginState extends State<Login> {
           ),
         );
 
-        // Small delay so user sees the message
+        // brief pause allows user to see success message
         await Future.delayed(const Duration(milliseconds: 500));
 
+        // ensures user doesn't see login screen again after logging in
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainNavigation()),
         );
       }
     } catch (e) {
+      // displays error message if login fails
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -75,6 +78,7 @@ class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // gradient background 
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -87,14 +91,16 @@ class _LoginState extends State<Login> {
             ],
           ),
         ),
+        // SafeArea prevents content from going under status bar
         child: SafeArea(
+          // SingleChildScrollView allows scrolling on small screens
           child: Center(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppSpacing.xl),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo/Icon
+                  // circular icon container with shadow
                   Container(
                     padding: const EdgeInsets.all(AppSpacing.xl),
                     decoration: BoxDecoration(
@@ -212,11 +218,12 @@ class _LoginState extends State<Login> {
                         ),
                         const SizedBox(height: AppSpacing.xl),
 
-                        // Login button
+                        // full-width button triggers login process
                         SizedBox(
                           width: double.infinity,
                           height: 56,
                           child: ElevatedButton(
+                            // null disables button when loading
                             onPressed: isLoading ? null : onLoginPressed,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
@@ -245,7 +252,7 @@ class _LoginState extends State<Login> {
                   ),
                   const SizedBox(height: AppSpacing.lg),
 
-                  // Register link
+                  // link navigates to registration page
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
