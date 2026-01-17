@@ -22,8 +22,12 @@ class _ScanCodePageState extends State<ScanCodePage> {
         ],
       ),
       body: MobileScanner(
+        controller: MobileScannerController(
+          detectionSpeed: DetectionSpeed.noDuplicates
+        ),
         onDetect: (capture) {
-          
+          print(capture);
+          print('IT WORKS!');
         },
       ),
     );
