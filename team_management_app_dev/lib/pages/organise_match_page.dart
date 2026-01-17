@@ -21,8 +21,6 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
   final titleController = TextEditingController();
   final locationController = TextEditingController();
   final descriptionController = TextEditingController();
-  final googleMapsLinkController = TextEditingController();
-  final directionsLinkController = TextEditingController();
   final opponentController = TextEditingController();
   
   // date and time stuff
@@ -73,8 +71,6 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
     titleController.dispose();
     locationController.dispose();
     descriptionController.dispose();
-    googleMapsLinkController.dispose();
-    directionsLinkController.dispose();
     opponentController.dispose();
     super.dispose();
   }
@@ -292,27 +288,6 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                       ),
                       const SizedBox(height: AppSpacing.md),
 
-                      // google maps links
-                      _buildLabel('Google Maps Place Link (Optional)'),
-                      TextField(
-                        controller: googleMapsLinkController,
-                        decoration: _buildInputDecoration(
-                          hint: 'e.g. https://maps.app.goo.gl/xxxxx',
-                          icon: Icons.map,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      _buildLabel('Google Maps Directions Link (Optional)'),
-                      TextField(
-                        controller: directionsLinkController,
-                        decoration: _buildInputDecoration(
-                          hint: 'e.g. https://maps.app.goo.gl/xxxxx',
-                          icon: Icons.directions,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
                       // description
                       _buildLabel('Description (Optional)'),
                       TextField(
@@ -486,12 +461,8 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
         type: eventDateTime.isAfter(DateTime.now()) ? 'upcoming' : 'past',
         iconType: 'soccer', // match icon
         teamId: selectedTeamId,
-        googleMapsLink: googleMapsLinkController.text.trim().isEmpty 
-            ? null 
-            : googleMapsLinkController.text.trim(),
-        directionsLink: directionsLinkController.text.trim().isEmpty 
-            ? null 
-            : directionsLinkController.text.trim(),
+        googleMapsLink: null, // matches don't need Google Maps links
+        directionsLink: null, // matches don't appear in routeplanner
       );
       
       await repository.createEvent(newMatch);
@@ -514,8 +485,6 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
         locationController.clear();
         descriptionController.clear();
         opponentController.clear();
-        googleMapsLinkController.clear();
-        directionsLinkController.clear();
         setState(() {
           selectedDate = DateTime.now();
           selectedTime = TimeOfDay.now();
