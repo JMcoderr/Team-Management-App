@@ -6,6 +6,7 @@ import '../../utils/constants.dart';
 import '../../widgets/custom_widgets.dart';
 import 'create_team_page.dart';
 import 'edit_team_page.dart';
+import 'scan_qr_page.dart';
 
 // TeamsPage shows all teams the user is part of
 class TeamsPage extends StatefulWidget {
@@ -323,8 +324,9 @@ class _TeamsPageState extends State<TeamsPage> {
 
             const SizedBox(height: AppSpacing.sm),
 
+
             // Create Team button
-            AnimatedButton(
+            IconButton(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -333,17 +335,30 @@ class _TeamsPageState extends State<TeamsPage> {
                   ),
                 );
               },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.add),
-                  SizedBox(width: AppSpacing.xs),
-                  Text('Create New Team', style: AppTextStyles.button),
-                ],
-              ),
+              icon: const Icon(Icons.add),
+              color: AppColors.primary,
+              tooltip: 'Create new team',
             ),
 
+            // Scan QR Code button
+            IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ScanCodePage(),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.qr_code_scanner),
+              color: AppColors.primary,
+              tooltip: 'Scan QR Code',
+            ),
+            
             const SizedBox(height: AppSpacing.sm),
+
+            // Scan QR button
+
           ],
         ),
       ),

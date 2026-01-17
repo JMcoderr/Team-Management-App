@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/team.dart';
 import 'auth_service.dart';
+import 'package:qr/qr.dart';
 
 // TeamsService handles team-related API calls
 // Uses http package directly for consistency with Jay's implementation
@@ -81,4 +82,24 @@ class TeamsService {
       throw Exception('Failed to edit team (${response.statusCode})');
     }
   }
+
+  // Invite member to team using QR code
+  // Future<String> generateInviteQrCode(int teamId) async {
+  //   final auth = AuthService();
+  //   final token = auth.token;
+  //   final response = await http.post(
+  //     Uri.parse('$baseUrl/teams/$teamId/addUser'),
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //       'Accept': 'application/json',
+  //       'Authorization': 'Bearer $token',
+  //     },
+  //     body: jsonEncode({
+  //       'userId': auth.userId,
+  //     }),
+  //   );
+    
+    // 
+
+  //}
 }
