@@ -83,19 +83,18 @@ class TeamsService {
   }
 
   // Data for QR code
-    Future<String> generateInviteQrCode(int teamId) async {
-      return jsonEncode({'teamId': teamId});
+    Future<String> generateInviteQrCode(int userId) async {
+      return jsonEncode({'userId': userId});
     }
 
   // Add user to team after scanning QR code
-  Future<void> useQRJoin(String qrData) async {
+  Future<void> useQRJoin(String qrData, int teamId) async {
     final auth = AuthService();
     final token = auth.token;
-    final userId = auth.userId;
 
     // Decode the QR data
     final Map<String, dynamic> data = jsonDecode(qrData);
-    final int teamId = data['teamId'];
+    final int scannedUserId = data['userId'];
 
     final response = await http.post(
       Uri.parse('$baseUrl/teams/$teamId/addUser'),
@@ -105,7 +104,7 @@ class TeamsService {
         'Authorization': 'Bearer $token',
       },
       body: jsonEncode({
-        'userId': userId,
+        'userId': scannedUserId,
       }),
     );
 
@@ -114,7 +113,7 @@ class TeamsService {
     }
 
     if (response.statusCode == 200) {
-      throw Exception('Successfully joined team $teamId via QR code.');
+      print('Successfully added user $scannedUserId to team $teamId via QR code.');
     }
   }
 }

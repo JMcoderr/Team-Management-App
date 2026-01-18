@@ -159,8 +159,8 @@ class _TeamsPageState extends State<TeamsPage> {
                                     ),
                                     const SizedBox(width: AppSpacing.sm),
                                     // Show edit button only if user is team owner
-                                    if (_isUserTeamOwner(team))
                                       // Edit team button
+                                      if (_isUserTeamOwner(team))
                                       IconButton(
                                         onPressed: () {
                                           Navigator.push(context, MaterialPageRoute(builder: (context) => EditTeamPage(teamId: teamId),
@@ -171,10 +171,11 @@ class _TeamsPageState extends State<TeamsPage> {
                                         color: AppColors.primary,
                                         tooltip: 'Edit team',
                                       ),
-                                      // Invite a member 
+                                      // Invite a member
+                                      if (_isUserTeamOwner(team)) 
                                       IconButton(
                                         onPressed: () {
-                                          Navigator.push(context, MaterialPageRoute(builder: (context) => ShowQrPage(teamId: teamId),
+                                          Navigator.push(context, MaterialPageRoute(builder: (context) => ScanCodePage(teamId: teamId),
                                             ),
                                           );
                                         },
@@ -244,8 +245,6 @@ class _TeamsPageState extends State<TeamsPage> {
                                                 final memberId = member['id'] as int;
                                                 final memberName = member['name'] as String;
                                                 final isOwner = memberId == team.ownerId;
-                                                final teamId = team.id;
-                                                print('Member: $memberName, isOwner: $isOwner, teamId: $teamId');
                                                 return Padding(
                                                   padding: const EdgeInsets.symmetric(
                                                     vertical: AppSpacing.xs,
@@ -345,19 +344,20 @@ class _TeamsPageState extends State<TeamsPage> {
               tooltip: 'Create new team',
             ),
 
-            // Scan QR Code button
+            // Show QR button
             IconButton(
               onPressed: () {
+                final userId = auth.userId.toString();
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => const ScanCodePage(),
+                    builder: (context) => ShowQrPage(userId: userId),
                   ),
                 );
               },
               icon: const Icon(Icons.qr_code_scanner),
               color: AppColors.primary,
-              tooltip: 'Scan QR Code',
+              tooltip: 'Show QR Code',
             ),
             
             const SizedBox(height: AppSpacing.sm),

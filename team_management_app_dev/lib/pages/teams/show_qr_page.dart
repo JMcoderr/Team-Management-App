@@ -5,9 +5,9 @@ import 'package:team_management_app_dev/data/services/teams_service.dart';
 
 // Shows the QR code that allows members to scan it and join the team.
 class ShowQrPage extends StatefulWidget {
-  const ShowQrPage({super.key, required this.teamId});
+  const ShowQrPage({super.key, required this.userId});
 
-  final String teamId;
+  final String userId;
 
   @override
   State<ShowQrPage> createState() => _ShowQrPage();
@@ -26,8 +26,8 @@ class _ShowQrPage extends State<ShowQrPage> {
   }
 
   Future<void> _generateQrCode() async {
-    final teamIdInt = int.parse(widget.teamId);
-    final qrData = await teamsService.generateInviteQrCode(teamIdInt);
+    final userIdInt = int.parse(widget.userId);
+    final qrData = await teamsService.generateInviteQrCode(userIdInt);
     final qrCode = QrCode(
       8,
       QrErrorCorrectLevel.H,
