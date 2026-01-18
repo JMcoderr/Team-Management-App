@@ -183,6 +183,60 @@ class _TeamsPageState extends State<TeamsPage> {
                                         color: AppColors.primary,
                                         tooltip: 'Invite member',
                                       ),
+                                      // Delete team button
+                                      if (_isUserTeamOwner(team))
+                                      IconButton(
+                                        onPressed: () {
+                                          teamsService.deleteTeam(team.id).then((_) {
+                                            // Show success message
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Team deleted successfully!'),
+                                                backgroundColor: Colors.green,
+                                              ),
+                                            );
+                                          }).catchError((e) {
+                                            // Show error message
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Failed to delete team: ${e.toString()}'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          });
+                                          // Reload teams
+                                          _loadTeams();
+                                        },
+                                        icon: const Icon(Icons.delete),
+                                        color: Colors.red,
+                                        tooltip: 'Delete team',
+                                      ),
+                                      // Leave team button
+                                      if (!_isUserTeamOwner(team))
+                                      IconButton(
+                                        onPressed: () {
+                                          teamsService.leaveTeam(team.id).then((_) {
+                                            // Show success message
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Team left successfully! Refresh to see changes.'),
+                                                backgroundColor: Colors.green,
+                                              ),
+                                            );
+                                          }).catchError((e) {
+                                            // Show error message
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Failed to leave team: ${e.toString()}'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          });
+                                        },
+                                        icon: const Icon(Icons.remove_circle),
+                                        color: Colors.red,
+                                        tooltip: 'Leave team',
+                                      ),
                                   ],
                                 ),
                                 const SizedBox(height: AppSpacing.md),

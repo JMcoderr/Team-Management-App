@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import '../models/team.dart';
 import 'auth_service.dart';
@@ -82,6 +83,7 @@ class TeamsService {
     }
   }
 
+  // Add members
   // Data for QR code
     Future<String> generateInviteQrCode(int userId) async {
       return jsonEncode({'userId': userId});
@@ -114,6 +116,40 @@ class TeamsService {
 
     if (response.statusCode == 200) {
       print('Successfully added user $scannedUserId to team $teamId via QR code.');
+    }
+  }
+
+  // Delete team
+  Future<void> deleteTeam(int teamId) async {
+    final auth = AuthService();
+    final token = auth.token;
+    final response = await http.delete(
+      Uri.parse('$baseUrl/teams/$teamId'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete team (${response.statusCode})');
+    }
+  }
+
+  // User leave team
+  Future<void> leaveTeam(int teamId) async {
+    final auth = AuthService();
+    final token = auth.token;
+    final response = await http.post(
+      Uri.parse('$baseUrl/teams/$teamId/leave'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete team (${response.statusCode})');
     }
   }
 }
