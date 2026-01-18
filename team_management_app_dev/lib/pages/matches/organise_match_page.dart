@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../data/models/event.dart';
-import '../data/models/team.dart';
-import '../providers/event_provider.dart';
-import '../data/services/teams_service.dart';
-import '../data/services/auth_service.dart';
-import '../utils/constants.dart';
+import '../../data/models/team.dart';
+import '../../data/services/teams_service.dart';
+import '../../data/services/auth_service.dart';
+import '../../data/services/match_service.dart';
+import '../../utils/constants.dart';
 
 // page for creating matches specifically
 class OrganiseMatchPage extends ConsumerStatefulWidget {
@@ -37,38 +36,10 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
   @override
   void initState() {
     super.initState();
-    // fetches teams for match assignment
-    _loadUserTeams();
-  }
+    // fetch teams user is part of
 
-  // filters to teams where user has access
-  Future<void> _loadUserTeams() async {
-    try {
-      final auth = AuthService();
-      final token = auth.token;
-      final userId = auth.userId;
+    // fetch all teams for invites
 
-      // retrieves all teams from API
-      final teamsService = TeamsService();
-      final allTeams = await teamsService.fetchTeams(token);
-
-      // filters to user's teams
-      final filtered = allTeams
-          .where(
-            (team) => team.ownerId == userId || team.memberIds.contains(userId),
-          )
-          .toList();
-
-      setState(() {
-        userTeams = filtered;
-        loadingTeams = false;
-      });
-    } catch (e) {
-      print('error loading teams: $e');
-      setState(() {
-        loadingTeams = false;
-      });
-    }
   }
 
   @override
@@ -337,37 +308,37 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                       const SizedBox(height: AppSpacing.xl),
 
                       // create button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton.icon(
-                          onPressed: isLoading ? null : _createMatch,
-                          icon: isLoading
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Icon(Icons.add),
-                          label: Text(
-                            isLoading ? 'Creating...' : 'Create Match',
-                            style: AppTextStyles.button,
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusMd,
-                              ),
-                            ),
-                            elevation: AppSpacing.elevationSm,
-                          ),
-                        ),
-                      ),
+                      // SizedBox(
+                      //   width: double.infinity,
+                      //   height: 56,
+                      //   child: ElevatedButton.icon(
+                      //     onPressed: isLoading ? null : _createMatch,
+                      //     icon: isLoading
+                      //         ? const SizedBox(
+                      //             width: 20,
+                      //             height: 20,
+                      //             child: CircularProgressIndicator(
+                      //               strokeWidth: 2,
+                      //               color: Colors.white,
+                      //             ),
+                      //           )
+                      //         : const Icon(Icons.add),
+                      //     label: Text(
+                      //       isLoading ? 'Creating...' : 'Create Match',
+                      //       style: AppTextStyles.button,
+                      //     ),
+                      //     style: ElevatedButton.styleFrom(
+                      //       backgroundColor: AppColors.primary,
+                      //       foregroundColor: Colors.white,
+                      //       shape: RoundedRectangleBorder(
+                      //         borderRadius: BorderRadius.circular(
+                      //           AppSpacing.radiusMd,
+                      //         ),
+                      //       ),
+                      //       elevation: AppSpacing.elevationSm,
+                      //     ),
+                      //   ),
+                      // ),
                     ],
                   ),
                 ),
@@ -444,108 +415,4 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
     }
   }
 
-  Future<void> _createMatch() async {
-    // validate stuff
-    if (titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('please add a match title'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    if (selectedTeamId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('please select a team'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    if (locationController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('please add a location'),
-          backgroundColor: AppColors.error,
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final repository = ref.read(eventRepositoryProvider);
-
-      // combine date and time
-      final eventDateTime = DateTime(
-        selectedDate.year,
-        selectedDate.month,
-        selectedDate.day,
-        selectedTime.hour,
-        selectedTime.minute,
-      );
-
-      final newMatch = Event(
-        id: DateTime.now().millisecondsSinceEpoch,
-        title: titleController.text.trim(),
-        description: descriptionController.text.trim(),
-        date: eventDateTime,
-        time:
-            '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}',
-        location: locationController.text.trim(),
-        type: eventDateTime.isAfter(DateTime.now()) ? 'upcoming' : 'past',
-        iconType: 'soccer', 
-        teamId: selectedTeamId,
-      );
-
-      await repository.createEvent(newMatch);
-
-      // refresh
-      ref.invalidate(eventsProvider);
-      ref.invalidate(upcomingEventsProvider);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Match created successfully!'),
-            backgroundColor: AppColors.success,
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-        // clear form
-        titleController.clear();
-        locationController.clear();
-        descriptionController.clear();
-        opponentController.clear();
-        setState(() {
-          selectedDate = DateTime.now();
-          selectedTime = TimeOfDay.now();
-          selectedTeamId = null;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to create match: ${e.toString()}'),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-      }
-    }
-  }
 }

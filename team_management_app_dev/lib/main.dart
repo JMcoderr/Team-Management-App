@@ -5,7 +5,7 @@ import 'pages/dashboard_page.dart';
 import 'pages/events_page.dart';
 import 'pages/schedule_page.dart';
 import 'pages/organise_page.dart';
-import 'pages/organise_match_page.dart';
+import 'pages/matches/organise_match_page.dart';
 import 'pages/routeplanner_page.dart';
 import 'pages/login.dart';
 import 'pages/teams/teams_page.dart';
