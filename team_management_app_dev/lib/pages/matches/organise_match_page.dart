@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../data/models/team.dart';
 import '../../data/services/teams_service.dart';
@@ -8,19 +7,19 @@ import '../../data/services/match_service.dart';
 import '../../utils/constants.dart';
 
 // page for creating matches specifically
-class OrganiseMatchPage extends ConsumerStatefulWidget {
+class OrganiseMatchPage extends StatefulWidget {
   const OrganiseMatchPage({Key? key}) : super(key: key);
 
   @override
-  ConsumerState<OrganiseMatchPage> createState() => _OrganiseMatchPageState();
+  State<OrganiseMatchPage> createState() => _OrganiseMatchPageState();
 }
 
-class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
+class _OrganiseMatchPageState extends State<OrganiseMatchPage> {
   // controllers for text fields
   final titleController = TextEditingController();
   final locationController = TextEditingController();
   final descriptionController = TextEditingController();
-  final opponentController = TextEditingController();
+  final instructionsController = TextEditingController();
 
   // date and time stuff
   DateTime selectedDate = DateTime.now();
@@ -28,18 +27,113 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
 
   // team selection
   int? selectedTeamId;
-  List<Team> userTeams = [];
-  bool loadingTeams = true;
+  int? selectedOpponentTeamId;
 
-  bool isLoading = false;
+  // state variables
+  List<Team> userTeams = [];
+  bool isLoadingTeams = true;
+
+  List<Team> opponentTeams = [];
+  bool isLoadingOpponentTeams = true;
+
+  // updated when teams are loaded or refreshed
+  late Future<List<Team>> teamsFuture;
+  late Future<List<Team>> allTeamsFuture;
+
+  final teamsService = TeamsService();
+  final auth = AuthService();
+
+  // create match function
+  Future<void> _createMatch() async {
+    // check if teams are selected
+    if (selectedTeamId == null || selectedOpponentTeamId == null || selectedTeamId == selectedOpponentTeamId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please select both teams.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    try {
+      final startDateTime = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        selectedTime.hour,
+        selectedTime.minute,
+      );
+
+      final endDateTime = startDateTime.add(const Duration(hours: 2));
+
+      // Turn to ISO string for the API
+      final datetimeStart = startDateTime.toIso8601String();
+      final datetimeEnd = endDateTime.toIso8601String();
+
+
+      await MatchService().createMatch(
+        title: titleController.text.trim(),
+        description: descriptionController.text.trim(),
+        datetimeStart: datetimeStart,
+        datetimeEnd: datetimeEnd,
+        latitude: 0.0, // Placeholder, TODO: use geocoding package
+        longitude: 0.0, // ^^
+        teamId: selectedTeamId!,
+        opponentTeamId: selectedOpponentTeamId!,
+        instructions: instructionsController.text.trim(),
+      );
+
+      // Feedback for users
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Match created successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to create match: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    // fetch teams user is part of
+    loadTeams();
+    loadOpponentTeams();
+  }
 
-    // fetch all teams for invites
+  // fetches teams from API and filters
+  void loadTeams() {
+    final token = auth.token;
+    final loggedInUserId = auth.userId;
 
+    setState(() {
+      teamsFuture = teamsService.fetchTeams(token).then((teams) {
+        // filters teams to only show teams owned by logged in user
+        final filtered = teams.where((team) {
+          final isOwner = team.ownerId == loggedInUserId;
+          return isOwner;
+        }).toList();
+        return filtered;
+      });
+    });
+  }
+
+  // fetches all other teams for opponent selection
+  void loadOpponentTeams() {
+    final token = auth.token;
+
+    setState(() {
+      allTeamsFuture = teamsService.fetchTeams(token);
+    });
   }
 
   @override
@@ -47,7 +141,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
     titleController.dispose();
     locationController.dispose();
     descriptionController.dispose();
-    opponentController.dispose();
+    instructionsController.dispose();
     super.dispose();
   }
 
@@ -82,7 +176,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                     gradient: LinearGradient(
                       colors: [
                         AppColors.primary,
-                        AppColors.primary.withOpacity(0.8),
+                        AppColors.primary.withValues(alpha: 0.8),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -95,7 +189,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(
                             AppSpacing.radiusMd,
                           ),
@@ -122,7 +216,7 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                             Text(
                               'Schedule a match for your team',
                               style: AppTextStyles.body.copyWith(
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -155,45 +249,99 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                       ),
                       const SizedBox(height: AppSpacing.md),
 
-                      // opponent
+                      // team dropdown
+                      _buildLabel('Your Team'),
+                      FutureBuilder<List<Team>>(
+                        future: teamsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          }
+
+                          if (snapshot.hasError) {
+                            return Text('Error loading teams');
+                          }
+
+                          final teams = snapshot.data ?? [];
+
+                          return DropdownButtonFormField<int?>(
+                            value: selectedTeamId,
+                            decoration: _buildInputDecoration(
+                              hint: 'Select team',
+                              icon: Icons.group_outlined,
+                            ),
+                            items: [
+                              const DropdownMenuItem<int?>(
+                                value: null,
+                                child: Text('No team'),
+                              ),
+                              ...teams.map((team) => DropdownMenuItem<int?>(
+                                    value: team.id,
+                                    child: Text(team.name),
+                                  )),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                selectedTeamId = value;
+                              });
+                            },
+                          );
+                        },
+                      ),
+                      
+                      const SizedBox(height: AppSpacing.md),
+
+                      // opponent team dropdown
                       _buildLabel('Opponent Team'),
-                      TextField(
-                        controller: opponentController,
-                        decoration: _buildInputDecoration(
-                          hint: 'e.g. Ajax Academy',
-                          icon: Icons.group,
-                        ),
+                      FutureBuilder<List<Team>>(
+                        future: allTeamsFuture,
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          }
+
+                          if (snapshot.hasError) {
+                            return Text('Error loading teams');
+                          }
+
+                          final teams = snapshot.data ?? [];
+
+                          return DropdownButtonFormField<int?>(
+                            value: selectedOpponentTeamId,
+                            decoration: _buildInputDecoration(
+                              hint: 'Select opponent team',
+                              icon: Icons.group_outlined,
+                            ),
+                            items: [
+                              const DropdownMenuItem<int?>(
+                                value: null,
+                                child: Text('Select opponent'),
+                              ),
+                              ...teams.map((team) => DropdownMenuItem<int?>(
+                                    value: team.id,
+                                    child: Text(team.name),
+                                  )),
+                            ],
+                            onChanged: (value) {
+                              setState(() {
+                                selectedOpponentTeamId = value;
+                              });
+                            },
+                          );
+                        },
                       ),
                       const SizedBox(height: AppSpacing.md),
 
-                      // team dropdown
-                      _buildLabel('Your Team'),
-                      loadingTeams
-                          ? const CircularProgressIndicator()
-                          : DropdownButtonFormField<int?>(
-                              value: selectedTeamId,
-                              decoration: _buildInputDecoration(
-                                hint: 'Select team',
-                                icon: Icons.group_outlined,
-                              ),
-                              items: [
-                                const DropdownMenuItem<int?>(
-                                  value: null,
-                                  child: Text('No team'),
-                                ),
-                                ...userTeams.map((team) {
-                                  return DropdownMenuItem<int?>(
-                                    value: team.id,
-                                    child: Text(team.name),
-                                  );
-                                }).toList(),
-                              ],
-                              onChanged: (value) {
-                                setState(() {
-                                  selectedTeamId = value;
-                                });
-                              },
-                            ),
+                      // instructions
+                      _buildLabel('Match Instructions (Optional)'),
+                      TextField(
+                        controller: instructionsController,
+                        maxLines: 3,
+                        decoration: _buildInputDecoration(
+                          hint: 'Add special instructions, meeting point, etc.',
+                          icon: Icons.info,
+                        ),
+                      ),
                       const SizedBox(height: AppSpacing.md),
 
                       // date and time
@@ -307,38 +455,29 @@ class _OrganiseMatchPageState extends ConsumerState<OrganiseMatchPage> {
                       ),
                       const SizedBox(height: AppSpacing.xl),
 
-                      // create button
-                      // SizedBox(
-                      //   width: double.infinity,
-                      //   height: 56,
-                      //   child: ElevatedButton.icon(
-                      //     onPressed: isLoading ? null : _createMatch,
-                      //     icon: isLoading
-                      //         ? const SizedBox(
-                      //             width: 20,
-                      //             height: 20,
-                      //             child: CircularProgressIndicator(
-                      //               strokeWidth: 2,
-                      //               color: Colors.white,
-                      //             ),
-                      //           )
-                      //         : const Icon(Icons.add),
-                      //     label: Text(
-                      //       isLoading ? 'Creating...' : 'Create Match',
-                      //       style: AppTextStyles.button,
-                      //     ),
-                      //     style: ElevatedButton.styleFrom(
-                      //       backgroundColor: AppColors.primary,
-                      //       foregroundColor: Colors.white,
-                      //       shape: RoundedRectangleBorder(
-                      //         borderRadius: BorderRadius.circular(
-                      //           AppSpacing.radiusMd,
-                      //         ),
-                      //       ),
-                      //       elevation: AppSpacing.elevationSm,
-                      //     ),
-                      //   ),
-                      // ),
+                      // action buttons
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                _createMatch();
+                              },
+                              icon: const Icon(Icons.check),
+                              label: const Text('Create Match'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusMd,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

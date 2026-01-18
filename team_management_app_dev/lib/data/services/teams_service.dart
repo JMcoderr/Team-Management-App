@@ -18,7 +18,7 @@ class TeamsService {
       },
     );
 
-    // check if request was successful (status 200 = OK)
+    // check if request was successful 
     if (response.statusCode == 200) {
       final Map<String, dynamic> body = jsonDecode(response.body);
 

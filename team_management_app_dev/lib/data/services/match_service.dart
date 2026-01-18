@@ -1,24 +1,70 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import '../models/team.dart';
 import 'auth_service.dart';
 
 class MatchService {
   static const String baseUrl =
       'https://team-managment-api.dendrowen.com/api/v2';
 
-      // Create list of all matches user is part of
+    // Create match
+    Future<void> createMatch({
+      required String title,
+      required String description,
+      required String datetimeStart,
+      required String datetimeEnd,
+      required double latitude,
+      required double longitude,
+      required int teamId,
+      required int opponentTeamId,
+      required String instructions,
+    }) async {
+      final auth = AuthService();
+      final token = auth.token;
+      final response = await http.post(
+        Uri.parse('$baseUrl/matches'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'title': title,
+          'description': description,
+          'datetimeStart': datetimeStart,
+          'datetimeEnd': datetimeEnd,
+          'location': {
+            'latitude': latitude,
+            'longitude': longitude,
+          },
+          'teamId': teamId,
+          'metadata': {
+            'instructions': instructions,
+          },
+          'invites': [
+            {
+              'teamId': opponentTeamId,
+            }
+          ]
+        }),
+      );
 
-      // Create a new match
+    // check if team was created
+    if (response.statusCode != 201) {
+      throw Exception('Failed to create match (${response.statusCode})');
+    }
 
-      // Edit match
+    }
 
-      // Delete match
+    // Create list of all matches user is part of
 
-      // Get match details
+    // Edit match
 
-      // Get all match invites
+    // Delete match
 
-      // Accept or Decline match invite
-      
+    // Get match details
+
+    // Get all match invites
+
+    // Accept or Decline match invite
+
 }
