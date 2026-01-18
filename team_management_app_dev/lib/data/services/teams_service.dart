@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import '../models/team.dart';
 import 'auth_service.dart';
@@ -150,6 +149,27 @@ class TeamsService {
 
     if (response.statusCode != 200) {
       throw Exception('Failed to delete team (${response.statusCode})');
+    }
+  }
+
+  // Remove member from team
+  Future<void> removeMember({required int teamId, required int userId}) async {
+    final auth = AuthService();
+    final token = auth.token;
+    final response = await http.post(
+      Uri.parse('$baseUrl/teams/$teamId/removeUser'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'userId': userId,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to remove member(${response.statusCode})');
     }
   }
 }

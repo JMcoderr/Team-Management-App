@@ -344,6 +344,7 @@ class _TeamsPageState extends State<TeamsPage> {
                                                             ),
                                                           ),
                                                         ),
+                                                        // Owner chip
                                                         if (isOwner)
                                                           Chip(
                                                             label: const Text(
@@ -358,6 +359,38 @@ class _TeamsPageState extends State<TeamsPage> {
                                                             labelPadding: const EdgeInsets.symmetric(
                                                               horizontal: AppSpacing.xs,
                                                             ),
+                                                          ),
+                                                        // Remove member button 
+                                                        // Also check if user is owner of specific team
+                                                        if (!isOwner && _isUserTeamOwner(team))
+                                                          IconButton(
+                                                            onPressed: () {
+                                                              teamsService.removeMember(
+                                                                teamId: team.id,
+                                                                userId: memberId,
+                                                              ).then((_) {
+                                                                // Show success message
+                                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                                  const SnackBar(
+                                                                    content: Text('Member has been removed successfully!'),
+                                                                    backgroundColor: Colors.green,
+                                                                  ),
+                                                                );
+                                                                // Reload teams
+                                                                _loadTeams();
+                                                              }).catchError((e) {
+                                                                // Show error message
+                                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                                  SnackBar(
+                                                                    content: Text('Failed to remove member: ${e.toString()}'),
+                                                                    backgroundColor: Colors.red,
+                                                                  ),
+                                                                );
+                                                              });
+                                                            },
+                                                            icon: const Icon(Icons.remove_circle),
+                                                            color: Colors.red,
+                                                            tooltip: 'Remove member',
                                                           ),
                                                       ],
                                                     ),
