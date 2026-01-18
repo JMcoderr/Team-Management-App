@@ -6,6 +6,8 @@ import '../../utils/constants.dart';
 import '../../widgets/custom_widgets.dart';
 import 'create_team_page.dart';
 import 'edit_team_page.dart';
+import 'scan_qr_page.dart';
+import 'show_qr_page.dart';
 
 // TeamsPage displays all teams the user belongs to
 class TeamsPage extends StatefulWidget {
@@ -21,6 +23,7 @@ class _TeamsPageState extends State<TeamsPage> {
 
   final teamsService = TeamsService();
   final auth = AuthService();
+  final Set<int> expandedTeams = {};
 
   @override
   void initState() {
@@ -35,19 +38,21 @@ class _TeamsPageState extends State<TeamsPage> {
 
     setState(() {
       teamsFuture = teamsService.fetchTeams(token).then((teams) {
-        print('Fetched ${teams.length} teams from API');
-
-        // filters teams to only ones user can access
+        // filters teams to only ones user can access (owner or member)
         final filtered = teams.where((team) {
           final isOwner = team.ownerId == loggedInUserId;
           final isMember = team.memberIds.contains(loggedInUserId);
-          print('Team "${team.name}": owner=$isOwner, member=$isMember');
           return isOwner || isMember;
         }).toList();
-        print('Filtered to ${filtered.length} teams for user $loggedInUserId');
         return filtered;
       });
     });
+  }
+
+  // Check if user is team owner
+  bool _isUserTeamOwner(Team team) {
+    final loggedInUserId = auth.userId;
+    return team.ownerId == loggedInUserId;
   }
 
   @override
@@ -76,28 +81,16 @@ class _TeamsPageState extends State<TeamsPage> {
                     );
                   }
 
+<<<<<<< HEAD
                   // shows error message if API call fails
+=======
+                  // Show error if any happen
+>>>>>>> origin/teamspagev2
                   if (snapshot.hasError) {
                     return Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.error_outline,
-                            size: 60,
-                            color: AppColors.error,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text('Error loading teams', style: AppTextStyles.h4),
-                          const SizedBox(height: AppSpacing.sm),
-                          Text(
-                            '${snapshot.error}',
-                            style: AppTextStyles.body.copyWith(
-                              color: AppColors.textSecondary,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
+                      child: Text(
+                        'Failed loading teams: ${snapshot.error}',
+                        style: AppTextStyles.body.copyWith(color: Colors.red),
                       ),
                     );
                   }
@@ -110,114 +103,314 @@ class _TeamsPageState extends State<TeamsPage> {
                       icon: Icons.group,
                       title: 'No teams yet',
                       message:
-                          'Create your first team to get started!\nInvite members and organize events together.',
-                      buttonText: 'Create Team',
-                      onButtonPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CreateTeamPage(),
-                          ),
-                        );
-                      },
+                          'Create your first team or get invited to one and they will appear here!',
                     );
                   }
 
-                  // displays team list with pull-to-refresh
-                  return RefreshIndicator(
-                    onRefresh: () async {
-                      _loadTeams();
-                      // waits for new data before hiding refresh indicator
-                      await teamsFuture;
-                    },
-                    color: AppColors.primary,
+                  // displays team list with Material wrapper
+                  return Material(
                     child: ListView.builder(
                       itemCount: teams.length,
                       itemBuilder: (context, index) {
                         final team = teams[index];
                         final teamId = team.id.toString();
+                        final isExpanded = expandedTeams.contains(team.id);
 
-                        // animates each team card on page load
-                        return TweenAnimationBuilder<double>(
-                          duration: Duration(milliseconds: 300 + (index * 100)),
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          builder: (context, value, child) {
-                            return Opacity(
-                              opacity: value,
-                              child: Transform.translate(
-                                offset: Offset(0, 20 * (1 - value)),
-                                child: child,
-                              ),
-                            );
-                          },
+                        // card for each team with expand/collapse functionality
+                        return Material(
                           child: CustomCard(
                             margin: const EdgeInsets.only(
                               bottom: AppSpacing.sm,
                             ),
-                            onTap: () {
-                              // placeholder for future team details navigation
-                            },
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // team icon container with background
-                                Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusMd,
+                                // header row with team info and action buttons
+                                Row(
+                                  children: [
+                                    // team icon container with background
+                                    Container(
+                                      width: 56,
+                                      height: 56,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primary.withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusMd,
+                                        ),
+                                      ),
+                                      child: Icon(
+                                        team.icon != null
+                                            ? Icons.calendar_today
+                                            : Icons.group,
+                                        color: AppColors.primary,
+                                        size: 28,
+                                      ),
                                     ),
-                                  ),
-                                  child: Icon(
-                                    team.icon != null
-                                        ? Icons.calendar_today
-                                        : Icons.group,
-                                    color: AppColors.primary,
-                                    size: 28,
-                                  ),
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                // team name and member count
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(team.name, style: AppTextStyles.h5),
-                                      const SizedBox(height: AppSpacing.xxs),
-                                      Row(
+                                    const SizedBox(width: AppSpacing.md),
+                                    // team name and description
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
-                                          Icon(
-                                            Icons.people,
-                                            size: 16,
-                                            color: AppColors.textSecondary,
-                                          ),
-                                          const SizedBox(width: AppSpacing.xxs),
-                                          Text(
-                                            '${team.membersCount} members',
-                                            style: AppTextStyles.bodySmall,
-                                          ),
+                                          Text(team.name, style: AppTextStyles.h5),
+                                          const SizedBox(height: AppSpacing.xxs),
+                                          if (team.description != null && team.description!.isNotEmpty)
+                                            Text(
+                                              team.description!,
+                                              style: AppTextStyles.bodySmall.copyWith(
+                                                color: AppColors.textSecondary,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                         ],
                                       ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.sm),
+                                    // edit button (only for team owner)
+                                      if (_isUserTeamOwner(team))
+                                      IconButton(
+                                        onPressed: () {
+                                          Navigator.push(context, MaterialPageRoute(builder: (context) => EditTeamPage(teamId: teamId),
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.edit),
+                                        color: AppColors.primary,
+                                        tooltip: 'Edit team',
+                                      ),
+                                      // Invite a member
+                                      if (_isUserTeamOwner(team)) 
+                                      IconButton(
+                                        onPressed: () {
+                                          Navigator.push(context, MaterialPageRoute(builder: (context) => ScanCodePage(teamId: teamId),
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.add),
+                                        color: AppColors.primary,
+                                        tooltip: 'Invite member',
+                                      ),
+                                      // Delete team button
+                                      if (_isUserTeamOwner(team))
+                                      IconButton(
+                                        onPressed: () {
+                                          teamsService.deleteTeam(team.id).then((_) {
+                                            // Show success message
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Team deleted successfully!'),
+                                                backgroundColor: Colors.green,
+                                              ),
+                                            );
+                                          }).catchError((e) {
+                                            // Show error message
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Failed to delete team: ${e.toString()}'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          });
+                                          // Reload teams
+                                          _loadTeams();
+                                        },
+                                        icon: const Icon(Icons.delete),
+                                        color: Colors.red,
+                                        tooltip: 'Delete team',
+                                      ),
+                                      // Leave team button
+                                      if (!_isUserTeamOwner(team))
+                                      IconButton(
+                                        onPressed: () {
+                                          teamsService.leaveTeam(team.id).then((_) {
+                                            // Show success message
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('Team left successfully! Refresh to see changes.'),
+                                                backgroundColor: Colors.green,
+                                              ),
+                                            );
+                                          }).catchError((e) {
+                                            // Show error message
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text('Failed to leave team: ${e.toString()}'),
+                                                backgroundColor: Colors.red,
+                                              ),
+                                            );
+                                          });
+                                        },
+                                        icon: const Icon(Icons.remove_circle),
+                                        color: Colors.red,
+                                        tooltip: 'Leave team',
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                // Members list on click
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    InkWell(
+                                      onTap: () {
+                                        setState(() {
+                                          if (isExpanded) {
+                                            expandedTeams.remove(team.id);
+                                          } else {
+                                            expandedTeams.add(team.id);
+                                          }
+                                        });
+                                      },
+                                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: AppSpacing.sm,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              isExpanded
+                                                  ? Icons.expand_less
+                                                  : Icons.expand_more,
+                                              color: AppColors.primary,
+                                              size: 24,
+                                            ),
+                                            const SizedBox(width: AppSpacing.xs),
+                                            Icon(
+                                              Icons.people,
+                                              size: 16,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                            const SizedBox(width: AppSpacing.xs),
+                                            Text(
+                                              '${team.membersCount} members',
+                                              style: AppTextStyles.bodySmall.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    // Expanded members list
+                                    if (isExpanded && team.members != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          top: AppSpacing.sm,
+                                          left: AppSpacing.md,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: team.members!
+                                              .map((member) {
+                                                final memberId = member['id'] as int;
+                                                final memberName = member['name'] as String;
+                                                final isOwner = memberId == team.ownerId;
+                                                return Padding(
+                                                  padding: const EdgeInsets.symmetric(
+                                                    vertical: AppSpacing.xs,
+                                                  ),
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color: isOwner
+                                                          ? AppColors.primary.withValues(alpha: 0.05)
+                                                          : Colors.transparent,
+                                                      borderRadius: BorderRadius.circular(
+                                                        AppSpacing.radiusSm,
+                                                      ),
+                                                      border: isOwner
+                                                          ? Border.all(
+                                                              color: AppColors.primary.withValues(alpha: 0.2),
+                                                            )
+                                                          : null,
+                                                    ),
+                                                    padding: const EdgeInsets.symmetric(
+                                                      horizontal: AppSpacing.sm,
+                                                      vertical: AppSpacing.xs,
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.person,
+                                                          size: 16,
+                                                          color: isOwner
+                                                              ? AppColors.primary
+                                                              : AppColors.textSecondary,
+                                                        ),
+                                                        const SizedBox(width: AppSpacing.xs),
+                                                        Expanded(
+                                                          child: Text(
+                                                            memberName,
+                                                            style: AppTextStyles.bodySmall.copyWith(
+                                                              color: isOwner
+                                                                  ? AppColors.primary
+                                                                  : AppColors.textPrimary,
+                                                              fontWeight: isOwner
+                                                                  ? FontWeight.w600
+                                                                  : FontWeight.normal,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        // Owner chip
+                                                        if (isOwner)
+                                                          Chip(
+                                                            label: const Text(
+                                                              'Team Owner',
+                                                              style: TextStyle(
+                                                                fontSize: 12,
+                                                                fontWeight: FontWeight.w600,
+                                                              ),
+                                                            ),
+                                                            backgroundColor:
+                                                                AppColors.primary.withValues(alpha: 0.2),
+                                                            labelPadding: const EdgeInsets.symmetric(
+                                                              horizontal: AppSpacing.xs,
+                                                            ),
+                                                          ),
+                                                        // Remove member button 
+                                                        // Also check if user is owner of specific team
+                                                        if (!isOwner && _isUserTeamOwner(team))
+                                                          IconButton(
+                                                            onPressed: () {
+                                                              teamsService.removeMember(
+                                                                teamId: team.id,
+                                                                userId: memberId,
+                                                              ).then((_) {
+                                                                // Show success message
+                                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                                  const SnackBar(
+                                                                    content: Text('Member has been removed successfully!'),
+                                                                    backgroundColor: Colors.green,
+                                                                  ),
+                                                                );
+                                                                // Reload teams
+                                                                _loadTeams();
+                                                              }).catchError((e) {
+                                                                // Show error message
+                                                                ScaffoldMessenger.of(context).showSnackBar(
+                                                                  SnackBar(
+                                                                    content: Text('Failed to remove member: ${e.toString()}'),
+                                                                    backgroundColor: Colors.red,
+                                                                  ),
+                                                                );
+                                                              });
+                                                            },
+                                                            icon: const Icon(Icons.remove_circle),
+                                                            color: Colors.red,
+                                                            tooltip: 'Remove member',
+                                                          ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                );
+                                              })
+                                              .toList(),
+                                          ),
+                                        ),
                                     ],
                                   ),
-                                ),
-                                const SizedBox(width: AppSpacing.sm),
-                                IconButton(
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            EditTeamPage(teamId: teamId),
-                                      ),
-                                    );
-                                  },
-                                  icon: const Icon(Icons.edit),
-                                  color: AppColors.primary,
-                                  tooltip: 'Edit team',
-                                ),
                               ],
                             ),
                           ),
@@ -231,8 +424,8 @@ class _TeamsPageState extends State<TeamsPage> {
 
             const SizedBox(height: AppSpacing.sm),
 
-            // button navigates to team creation page
-            AnimatedButton(
+            // create team button navigates to team creation page
+            IconButton(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -241,17 +434,29 @@ class _TeamsPageState extends State<TeamsPage> {
                   ),
                 );
               },
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.add),
-                  SizedBox(width: AppSpacing.xs),
-                  Text('Create New Team', style: AppTextStyles.button),
-                ],
-              ),
+              icon: const Icon(Icons.add),
+              color: AppColors.primary,
+              tooltip: 'Create new team',
             ),
 
+            // show QR code button for user profile
+            IconButton(
+              onPressed: () {
+                final userId = auth.userId.toString();
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ShowQrPage(userId: userId),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.qr_code_scanner),
+              color: AppColors.primary,
+              tooltip: 'Show QR Code',
+            ),
+            
             const SizedBox(height: AppSpacing.sm),
+
           ],
         ),
       ),

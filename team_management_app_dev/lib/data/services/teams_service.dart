@@ -88,4 +88,95 @@ class TeamsService {
       throw Exception('Failed to edit team (${response.statusCode})');
     }
   }
+
+  // Add members
+  // Data for QR code
+    Future<String> generateInviteQrCode(int userId) async {
+      return jsonEncode({'userId': userId});
+    }
+
+  // Add user to team after scanning QR code
+  Future<void> useQRJoin(String qrData, int teamId) async {
+    final auth = AuthService();
+    final token = auth.token;
+
+    // Decode the QR data
+    final Map<String, dynamic> data = jsonDecode(qrData);
+    final int scannedUserId = data['userId'];
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/teams/$teamId/addUser'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'userId': scannedUserId,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to join team via QR code (${response.statusCode})');
+    }
+
+    if (response.statusCode == 200) {
+      print('Successfully added user $scannedUserId to team $teamId via QR code.');
+    }
+  }
+
+  // Delete team
+  Future<void> deleteTeam(int teamId) async {
+    final auth = AuthService();
+    final token = auth.token;
+    final response = await http.delete(
+      Uri.parse('$baseUrl/teams/$teamId'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete team (${response.statusCode})');
+    }
+  }
+
+  // User leave team
+  Future<void> leaveTeam(int teamId) async {
+    final auth = AuthService();
+    final token = auth.token;
+    final response = await http.post(
+      Uri.parse('$baseUrl/teams/$teamId/leave'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete team (${response.statusCode})');
+    }
+  }
+
+  // Remove member from team
+  Future<void> removeMember({required int teamId, required int userId}) async {
+    final auth = AuthService();
+    final token = auth.token;
+    final response = await http.post(
+      Uri.parse('$baseUrl/teams/$teamId/removeUser'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'userId': userId,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to remove member(${response.statusCode})');
+    }
+  }
 }
