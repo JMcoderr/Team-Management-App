@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/team.dart';
 import 'auth_service.dart';
-import 'package:qr/qr.dart';
 
 // TeamsService handles team-related API calls
 // Uses http package directly for consistency with Jay's implementation
@@ -83,23 +82,39 @@ class TeamsService {
     }
   }
 
-  // Invite member to team using QR code
-  // Future<String> generateInviteQrCode(int teamId) async {
-  //   final auth = AuthService();
-  //   final token = auth.token;
-  //   final response = await http.post(
-  //     Uri.parse('$baseUrl/teams/$teamId/addUser'),
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //       'Accept': 'application/json',
-  //       'Authorization': 'Bearer $token',
-  //     },
-  //     body: jsonEncode({
-  //       'userId': auth.userId,
-  //     }),
-  //   );
-    
-    // 
+  // Data for QR code
+    Future<String> generateInviteQrCode(int teamId) async {
+      return jsonEncode({'teamId': teamId});
+    }
 
-  //}
+  // Add user to team after scanning QR code
+  Future<void> useQRJoin(String qrData) async {
+    final auth = AuthService();
+    final token = auth.token;
+    final userId = auth.userId;
+
+    // Decode the QR data
+    final Map<String, dynamic> data = jsonDecode(qrData);
+    final int teamId = data['teamId'];
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/teams/$teamId/addUser'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'userId': userId,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to join team via QR code (${response.statusCode})');
+    }
+
+    if (response.statusCode == 200) {
+      throw Exception('Successfully joined team $teamId via QR code.');
+    }
+  }
 }

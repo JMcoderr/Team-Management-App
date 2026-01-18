@@ -7,6 +7,7 @@ import '../../widgets/custom_widgets.dart';
 import 'create_team_page.dart';
 import 'edit_team_page.dart';
 import 'scan_qr_page.dart';
+import 'show_qr_page.dart';
 
 // TeamsPage shows all teams the user is part of
 class TeamsPage extends StatefulWidget {
@@ -173,7 +174,9 @@ class _TeamsPageState extends State<TeamsPage> {
                                       // Invite a member 
                                       IconButton(
                                         onPressed: () {
-                                          // Magically generate QR code ( WIP )
+                                          Navigator.push(context, MaterialPageRoute(builder: (context) => ShowQrPage(teamId: teamId),
+                                            ),
+                                          );
                                         },
                                         icon: const Icon(Icons.add),
                                         color: AppColors.primary,
@@ -241,6 +244,8 @@ class _TeamsPageState extends State<TeamsPage> {
                                                 final memberId = member['id'] as int;
                                                 final memberName = member['name'] as String;
                                                 final isOwner = memberId == team.ownerId;
+                                                final teamId = team.id;
+                                                print('Member: $memberName, isOwner: $isOwner, teamId: $teamId');
                                                 return Padding(
                                                   padding: const EdgeInsets.symmetric(
                                                     vertical: AppSpacing.xs,
