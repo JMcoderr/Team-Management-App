@@ -81,11 +81,7 @@ class _TeamsPageState extends State<TeamsPage> {
                     );
                   }
 
-<<<<<<< HEAD
                   // shows error message if API call fails
-=======
-                  // Show error if any happen
->>>>>>> origin/teamspagev2
                   if (snapshot.hasError) {
                     return Center(
                       child: Text(
