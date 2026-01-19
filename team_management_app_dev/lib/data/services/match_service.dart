@@ -32,27 +32,19 @@ class MatchService {
         'description': description,
         'datetimeStart': datetimeStart,
         'datetimeEnd': datetimeEnd,
-        'location': {
-          'latitude': latitude,
-          'longitude': longitude,
-        },
+        'location': {'latitude': latitude, 'longitude': longitude},
         'teamId': teamId,
-        'metadata': {
-          'instructions': instructions,
-        },
+        'metadata': {'instructions': instructions},
         'invites': [
-          {
-            'teamId': opponentTeamId,
-          }
-        ]
+          {'teamId': opponentTeamId},
+        ],
       }),
     );
 
-  // check if team was created
-  if (response.statusCode != 201) {
-    throw Exception('Failed to create match (${response.statusCode})');
-  }
-
+    // check if team was created
+    if (response.statusCode != 201) {
+      throw Exception('Failed to create match (${response.statusCode})');
+    }
   }
 
   // Create list of all matches user is part of
@@ -82,7 +74,7 @@ class MatchService {
       final pendingInvites = body['data']?.where((invite) {
         final status = (invite['status']).toString().trim().toLowerCase();
         return status == 'pending';
-      }).toList(); 
+      }).toList();
 
       return pendingInvites;
     } else {
@@ -90,8 +82,7 @@ class MatchService {
     }
   }
 
-
-  // Get all matches 
+  // Get all matches
   Future<List<dynamic>> fetchAllMatches() async {
     final auth = AuthService();
     final token = auth.token;
@@ -111,7 +102,6 @@ class MatchService {
       throw Exception('Failed to fetch matches (${response.statusCode})');
     }
   }
-
 
   // Get all matches and invite details then
   Future<List<Map<String, dynamic>>> getAllInviteDetails(int userId) async {
@@ -142,7 +132,7 @@ class MatchService {
   }
 
   // Accept match invite
-  Future<void> acceptMatchInvite({ required int inviteId,}) async {
+  Future<void> acceptMatchInvite({required int inviteId}) async {
     final auth = AuthService();
     final token = auth.token;
     final response = await http.post(
@@ -152,18 +142,18 @@ class MatchService {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode({
-        'status': 'accepted',
-      }),
+      body: jsonEncode({'status': 'accepted'}),
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to respond to match invite (${response.statusCode})');
+      throw Exception(
+        'Failed to respond to match invite (${response.statusCode})',
+      );
     }
   }
 
   // Decline match invite
-  Future<void> declineMatchInvite({required int inviteId,}) async {
+  Future<void> declineMatchInvite({required int inviteId}) async {
     final auth = AuthService();
     final token = auth.token;
     final response = await http.post(
@@ -173,13 +163,31 @@ class MatchService {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode({
-        'status': 'declined',
-      }),
+      body: jsonEncode({'status': 'declined'}),
     );
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to respond to match invite (${response.statusCode})');
+      throw Exception(
+        'Failed to respond to match invite (${response.statusCode})',
+      );
+    }
+  }
+
+  // Delete match
+  Future<void> deleteMatch({required int matchId}) async {
+    final auth = AuthService();
+    final token = auth.token;
+    final response = await http.delete(
+      Uri.parse('$baseUrl/matches/$matchId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete match (${response.statusCode})');
     }
   }
 }

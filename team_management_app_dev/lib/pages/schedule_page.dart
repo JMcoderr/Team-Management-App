@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/event_provider.dart';
 import '../data/models/event.dart';
+import '../data/services/match_service.dart';
+import 'matches/organise_match_page.dart';
 
-// Schedule page - shows events in weekly view
+// Schedule page - shows events and matches in weekly view
 class SchedulePage extends ConsumerStatefulWidget {
   const SchedulePage({super.key});
 
@@ -13,6 +15,8 @@ class SchedulePage extends ConsumerStatefulWidget {
 
 class _SchedulePageState extends ConsumerState<SchedulePage> {
   DateTime selectedWeek = DateTime.now(); // Current week being shown
+  List<Map<String, dynamic>> matches = []; // Store matches here
+  bool loadingMatches = false;
 
   // Get Monday of the week
   DateTime getStartOfWeek(DateTime date) {
@@ -42,6 +46,98 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
     setState(() {
       selectedWeek = selectedWeek.add(Duration(days: 7));
     });
+  }
+
+  // Load matches from api
+  Future<void> loadMatches() async {
+    setState(() {
+      loadingMatches = true;
+    });
+
+    try {
+      final matchService = MatchService();
+      final allMatches = await matchService.fetchAllMatches();
+      final invites = await matchService.fetchMatchInvites();
+
+      // Combine matches with invite status
+      List<Map<String, dynamic>> combined = [];
+      for (var match in allMatches) {
+        // Find invite status for this match
+        var invite = invites
+            .where((inv) => inv['matchId'] == match['id'])
+            .toList();
+        String status = 'accepted'; // default
+        if (invite.isNotEmpty) {
+          status = invite[0]['status'] ?? 'accepted';
+        }
+
+        combined.add({...match, 'status': status});
+      }
+
+      setState(() {
+        matches = combined;
+        loadingMatches = false;
+      });
+    } catch (e) {
+      setState(() {
+        loadingMatches = false;
+      });
+    }
+  }
+
+  // Delete match
+  Future<void> deleteMatch(int matchId) async {
+    // Show confirmation first
+    bool? confirm = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Match'),
+          content: const Text('Are you sure you want to delete this match?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      try {
+        // Call delete api
+        final matchService = MatchService();
+        await matchService.deleteMatch(matchId: matchId);
+
+        // Remove from list
+        setState(() {
+          matches.removeWhere((m) => m['id'] == matchId);
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Match deleted')));
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error deleting match: $e')));
+        }
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadMatches(); // Load matches when page opens
   }
 
   @override
@@ -111,6 +207,26 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                           event.date.day == day.day;
                     }).toList();
 
+                    // Find matches that match this day
+                    List<Map<String, dynamic>> dayMatches = matches.where((
+                      match,
+                    ) {
+                      if (match['datetimeStart'] == null) return false;
+                      try {
+                        DateTime matchDate = DateTime.parse(
+                          match['datetimeStart'],
+                        );
+                        return matchDate.year == day.year &&
+                            matchDate.month == day.month &&
+                            matchDate.day == day.day;
+                      } catch (e) {
+                        return false;
+                      }
+                    }).toList();
+
+                    // Count total items
+                    int totalItems = dayEvents.length + dayMatches.length;
+
                     return Container(
                       margin: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -139,7 +255,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                if (dayEvents.isNotEmpty)
+                                if (totalItems > 0)
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
@@ -150,7 +266,7 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
-                                      '${dayEvents.length}',
+                                      '$totalItems',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 12,
@@ -160,27 +276,129 @@ class _SchedulePageState extends ConsumerState<SchedulePage> {
                               ],
                             ),
                           ),
-                          if (dayEvents.isEmpty)
+                          if (totalItems == 0)
                             const Padding(
                               padding: EdgeInsets.all(16),
                               child: Text(
-                                'No events',
+                                'No events or matches',
                                 style: TextStyle(color: Colors.grey),
                               ),
                             )
                           else
-                            ...dayEvents.map((event) {
-                              return ListTile(
-                                leading: const Icon(
-                                  Icons.event,
-                                  color: Colors.blue,
-                                ),
-                                title: Text(event.title),
-                                subtitle: Text(
-                                  '${event.time} - ${event.location}',
-                                ),
-                              );
-                            }).toList(),
+                            Column(
+                              children: [
+                                // Show events first
+                                ...dayEvents.map((event) {
+                                  return ListTile(
+                                    leading: const Icon(
+                                      Icons.event,
+                                      color: Colors.blue,
+                                    ),
+                                    title: Text(event.title),
+                                    subtitle: Text(
+                                      '${event.time} - ${event.location}',
+                                    ),
+                                  );
+                                }),
+                                // Show matches
+                                ...dayMatches.map((match) {
+                                  // Get time from datetime
+                                  String matchTime = '';
+                                  try {
+                                    DateTime dt = DateTime.parse(
+                                      match['datetimeStart'],
+                                    );
+                                    matchTime =
+                                        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                                  } catch (e) {
+                                    matchTime = 'N/A';
+                                  }
+
+                                  // Get status
+                                  String status = match['status'] ?? 'accepted';
+                                  Color statusColor = status == 'pending'
+                                      ? Colors.orange
+                                      : Colors.green;
+
+                                  return ListTile(
+                                    leading: const Icon(
+                                      Icons.sports_soccer,
+                                      color: Colors.red,
+                                    ),
+                                    title: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            match['title'] ?? 'Match',
+                                          ),
+                                        ),
+                                        // Status badge
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: statusColor,
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            status,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 10,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    subtitle: Text(matchTime),
+                                    trailing: SizedBox(
+                                      width: 80,
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          // Edit button
+                                          IconButton(
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            icon: const Icon(
+                                              Icons.edit,
+                                              size: 18,
+                                            ),
+                                            onPressed: () {
+                                              // Go to edit match page
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (context) =>
+                                                      const OrganiseMatchPage(),
+                                                ),
+                                              ).then((_) => loadMatches());
+                                            },
+                                          ),
+                                          const SizedBox(width: 8),
+                                          // Delete button
+                                          IconButton(
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            icon: const Icon(
+                                              Icons.delete,
+                                              size: 18,
+                                            ),
+                                            onPressed: () {
+                                              deleteMatch(match['id']);
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ],
+                            ),
                         ],
                       ),
                     );

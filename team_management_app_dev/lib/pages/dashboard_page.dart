@@ -126,7 +126,7 @@ class _DashboardPageState extends ConsumerState<DashboardPage> {
                       mainAxisSpacing: 16,
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
-                      childAspectRatio: constraints.maxWidth < 600 ? 3 : 1.2,
+                      childAspectRatio: constraints.maxWidth < 600 ? 2.5 : 1.2,
                       children: [
                         // Show number of teams
                         StatsCard(

@@ -10,13 +10,13 @@ class EmptyState extends StatelessWidget {
   final VoidCallback? onButtonPressed;
 
   const EmptyState({
-    Key? key,
+    super.key,
     required this.icon,
     required this.title,
     required this.message,
     this.buttonText,
     this.onButtonPressed,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -70,11 +70,11 @@ class LoadingSkeleton extends StatefulWidget {
   final double borderRadius;
 
   const LoadingSkeleton({
-    Key? key,
+    super.key,
     this.height = 100,
     this.width,
     this.borderRadius = AppSpacing.radiusMd,
-  }) : super(key: key);
+  });
 
   @override
   State<LoadingSkeleton> createState() => _LoadingSkeletonState();
@@ -142,7 +142,7 @@ class _LoadingSkeletonState extends State<LoadingSkeleton>
 
 // CardSkeleton displays placeholder for loading list items
 class CardSkeleton extends StatelessWidget {
-  const CardSkeleton({Key? key}) : super(key: key);
+  const CardSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -197,14 +197,14 @@ class AnimatedButton extends StatefulWidget {
   final bool isLoading;
 
   const AnimatedButton({
-    Key? key,
+    super.key,
     required this.child,
     this.onPressed,
     this.backgroundColor,
     this.foregroundColor,
     this.padding,
     this.isLoading = false,
-  }) : super(key: key);
+  });
 
   @override
   State<AnimatedButton> createState() => _AnimatedButtonState();
@@ -301,13 +301,13 @@ class CustomCard extends StatelessWidget {
   final Color? color;
 
   const CustomCard({
-    Key? key,
+    super.key,
     required this.child,
     this.onTap,
     this.margin,
     this.padding,
     this.color,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -343,10 +343,10 @@ class GradientHeader extends StatelessWidget {
   final List<Color> colors;
 
   const GradientHeader({
-    Key? key,
+    super.key,
     required this.title,
     this.colors = const [AppColors.primary, AppColors.primaryDark],
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

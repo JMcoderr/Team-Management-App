@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 // StatsCard displays a statistic with icon, value, and label
 class StatsCard extends StatelessWidget {
-  final String title; 
-  final String value; 
+  final String title;
+  final String value;
   final IconData icon;
 
   // constructor requires all three properties
@@ -17,28 +17,28 @@ class StatsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 4, 
+      elevation: 4,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 50, color: Colors.blue),
-            const SizedBox(height: 12), 
+            Icon(icon, size: 40, color: Colors.blue),
+            const SizedBox(height: 8),
             Text(
               value,
               style: const TextStyle(
-                fontSize: 28,
+                fontSize: 24,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
 
             // label text below value
             Text(
               title,
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ],
         ),
