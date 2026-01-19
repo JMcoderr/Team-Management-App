@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:team_management_app_dev/data/services/teams_service.dart';
-import 'package:team_management_app_dev/data/models/team.dart';
 import 'package:team_management_app_dev/data/services/auth_service.dart';
 import 'package:team_management_app_dev/data/services/match_service.dart';
 
@@ -64,13 +63,13 @@ class _InvitationsPageState extends State<InvitationsPage> {
                     IconButton(
                       icon: const Icon(Icons.check, color: Colors.green),
                       onPressed: () {
-                        // TODO: Accept invite
+                        matchService.acceptMatchInvite(inviteId: invite['inviteId'] as int);
                       },
                     ),
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.red),
                       onPressed: () {
-                        // TODO: Decline invite
+                        matchService.declineMatchInvite(inviteId: invite['inviteId'] as int); 
                       },
                     ),
                   ],
