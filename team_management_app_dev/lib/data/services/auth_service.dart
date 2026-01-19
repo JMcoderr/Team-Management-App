@@ -42,9 +42,6 @@ class AuthService {
       }),
     );
 
-    print('STATUS: ${response.statusCode}');
-    print('BODY: ${response.body}');
-
     // Check for succes
     if (response.statusCode == 200) {
       final Map<String, dynamic> body = jsonDecode(response.body);
@@ -56,9 +53,6 @@ class AuthService {
       // Store token and userId
       _token = token;
       _userId = userId;
-
-      print ('Logged in as user $userId');
-      print ('Token: $token');
 
       return token;
     }

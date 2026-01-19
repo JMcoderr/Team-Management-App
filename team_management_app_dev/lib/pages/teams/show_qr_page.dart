@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
-import 'package:qr/qr.dart';
 import 'package:team_management_app_dev/data/services/teams_service.dart';
 
 // Shows the QR code that allows members to scan it and join the team.

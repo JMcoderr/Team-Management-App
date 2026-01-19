@@ -40,7 +40,6 @@ class _ScanCodePageState extends State<ScanCodePage> {
           final List<Barcode> barcodes = capture.barcodes;
           for (final barcode in barcodes) {
             final String? code = barcode.rawValue;
-            print('Scanned code: $code');
 
             // Use the scanned data to join the team
             if (code != null) {

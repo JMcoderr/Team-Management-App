@@ -322,7 +322,7 @@ class CustomCard extends StatelessWidget {
           ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        side: BorderSide(color: AppColors.divider.withOpacity(0.5), width: 1),
+        side: BorderSide(color: AppColors.divider.withValues(alpha: 0.5), width: 1),
       ),
       color: color ?? AppColors.surface,
       child: InkWell(

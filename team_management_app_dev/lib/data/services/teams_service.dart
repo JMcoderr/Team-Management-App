@@ -119,10 +119,6 @@ class TeamsService {
     if (response.statusCode != 200) {
       throw Exception('Failed to join team via QR code (${response.statusCode})');
     }
-
-    if (response.statusCode == 200) {
-      print('Successfully added user $scannedUserId to team $teamId via QR code.');
-    }
   }
 
   // Delete team

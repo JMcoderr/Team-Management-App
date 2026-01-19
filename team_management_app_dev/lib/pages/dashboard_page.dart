@@ -3,16 +3,62 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../widgets/stats_card.dart';
 import '../providers/event_provider.dart';
+import '../data/services/teams_service.dart';
+import '../data/services/auth_service.dart';
 
-// DashboardPage shows overview of user's teams and events
-class DashboardPage extends ConsumerWidget {
-  const DashboardPage({Key? key}) : super(key: key);
+// Dashboard page - shows overview of teams and events
+class DashboardPage extends ConsumerStatefulWidget {
+  const DashboardPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // watches providers to rebuild when event data changes
+  ConsumerState<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends ConsumerState<DashboardPage> {
+  int teamCount = 0;
+  bool loadingTeams = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Load team count when page opens
+    _loadTeamCount();
+  }
+
+  // Get number of teams from API
+  Future<void> _loadTeamCount() async {
+    try {
+      final auth = AuthService();
+      final token = auth.token;
+      final userId = auth.userId;
+      final teamsService = TeamsService();
+      final allTeams = await teamsService.fetchTeams(token);
+
+      // Filter to only teams user is in
+      final userTeams = allTeams
+          .where(
+            (team) => team.ownerId == userId || team.memberIds.contains(userId),
+          )
+          .toList();
+
+      setState(() {
+        teamCount = userTeams.length;
+        loadingTeams = false;
+      });
+    } catch (e) {
+      setState(() {
+        loadingTeams = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Get events from provider
     final eventsAsync = ref.watch(eventsProvider);
-    final upcomingEvents = ref.watch(upcomingEventsProvider);
+    final upcomingEvents = eventsAsync.whenData(
+      (events) => events.where((e) => e.type == 'upcoming').take(3).toList(),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -23,14 +69,13 @@ class DashboardPage extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) => Center(child: Text('Error: $err')),
         data: (allEvents) {
-          // counts total events for statistics card
+          // Count total events
           final totalEvents = allEvents.length;
 
-          // calculates events within current week range
+          // Get this week's events
           final now = DateTime.now();
           final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
           final endOfWeek = startOfWeek.add(const Duration(days: 6));
-          // filters events falling within week boundaries
           final thisWeekEvents = allEvents.where((event) {
             return event.date.isAfter(
                   startOfWeek.subtract(const Duration(days: 1)),
@@ -43,7 +88,7 @@ class DashboardPage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // greeting text
+                // Welcome message
                 const Text(
                   'Welcome Back!',
                   style: TextStyle(
@@ -59,17 +104,17 @@ class DashboardPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 32),
 
-                // stats
+                // Stats cards
                 const Text(
                   'Quick Stats',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
 
-                // responsive grid adjusts columns based on screen width
+                // Grid of stat cards
                 LayoutBuilder(
                   builder: (context, constraints) {
-                    // calculates optimal column count for current wid
+                    // Change number of columns based on screen size
                     int columns = 4;
                     if (constraints.maxWidth < 1200) columns = 3;
                     if (constraints.maxWidth < 900) columns = 2;
@@ -83,13 +128,13 @@ class DashboardPage extends ConsumerWidget {
                       physics: const NeverScrollableScrollPhysics(),
                       childAspectRatio: constraints.maxWidth < 600 ? 3 : 1.2,
                       children: [
-                        // placeholder for teams count
+                        // Show number of teams
                         StatsCard(
                           title: 'Teams',
-                          value: '0',
+                          value: loadingTeams ? '...' : '$teamCount',
                           icon: Icons.group,
                         ),
-                        // displays total event count from provider
+                        // Show total events
                         StatsCard(
                           title: 'Events',
                           value: '$totalEvents',

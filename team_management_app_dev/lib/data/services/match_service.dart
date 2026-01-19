@@ -67,7 +67,6 @@ class MatchService {
   Future<List<dynamic>> fetchMatchInvites() async {
     final auth = AuthService();
     final token = auth.token;
-    print(token);
     final response = await http.get(
       Uri.parse('$baseUrl/matches/invites'),
       headers: {
@@ -146,7 +145,6 @@ class MatchService {
   Future<void> acceptMatchInvite({ required int inviteId,}) async {
     final auth = AuthService();
     final token = auth.token;
-    print(inviteId);
     final response = await http.post(
       Uri.parse('$baseUrl/matches/invites/$inviteId'),
       headers: {

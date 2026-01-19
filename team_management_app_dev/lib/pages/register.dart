@@ -26,8 +26,6 @@ class _RegisterState extends State<Register> {
 
     try {
       await authService.register(nameController.text, passwordController.text);
-      print('Registered successfully');
-
 
       if (mounted) {
         // confirms successful account creation

@@ -4,16 +4,14 @@ class Event {
   final String description;
   final DateTime date;
   final String time;
-  final String location;
-  final String type; //upcoming or past determines filtering
-  final String
-  iconType; // soccer, training, meeting determines icon shown
-  final int?
-  teamId; // links event to specific team, nullable for events without team
-  final double? latitude; // location coordinates from API
+  String location; 
+  final String type; 
+  final String iconType;
+  final int? teamId;
+  final double? latitude;
   final double? longitude;
-  final String? googleMapsLink; // place link for viewing location
-  final String? directionsLink; // directions link for navigation
+  final String? googleMapsLink;
+
 
   Event({
     required this.id,
@@ -28,7 +26,6 @@ class Event {
     this.latitude,
     this.longitude,
     this.googleMapsLink,
-    this.directionsLink,
   });
 
   // converts JSON from API to Event object
@@ -56,9 +53,12 @@ class Event {
     if (json['location'] is Map) {
       lat = (json['location']['latitude'] as num?)?.toDouble();
       lng = (json['location']['longitude'] as num?)?.toDouble();
-      locationString = 'Location';
+      locationString = json['location']['address'] ?? 'Location';
+    } else if (json['location'] != null &&
+        json['location'].toString().trim().isNotEmpty) {
+      locationString = json['location'].toString();
     } else {
-      locationString = json['location'] ?? 'TBD';
+      locationString = 'No location';
     }
 
     return Event(
@@ -74,7 +74,6 @@ class Event {
       latitude: lat,
       longitude: lng,
       googleMapsLink: json['googleMapsLink'] as String?,
-      directionsLink: json['directionsLink'] as String?,
     );
   }
 

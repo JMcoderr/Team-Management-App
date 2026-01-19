@@ -8,11 +8,11 @@ class StatsCard extends StatelessWidget {
 
   // constructor requires all three properties
   const StatsCard({
-    Key? key,
+    super.key,
     required this.title,
     required this.value,
     required this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

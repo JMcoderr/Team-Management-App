@@ -86,7 +86,7 @@ class _LoginState extends State<Login> {
             end: Alignment.bottomRight,
             colors: [
               AppColors.primary,
-              AppColors.primary.withOpacity(0.8),
+              AppColors.primary.withValues(alpha: 0.8),
               AppColors.accent,
             ],
           ),
@@ -128,7 +128,7 @@ class _LoginState extends State<Login> {
                   Text(
                     'Login to manage your teams',
                     style: AppTextStyles.body.copyWith(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xxl),
