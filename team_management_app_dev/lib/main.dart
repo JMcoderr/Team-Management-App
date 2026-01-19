@@ -9,6 +9,7 @@ import 'pages/matches/organise_match_page.dart';
 import 'pages/routeplanner_page.dart';
 import 'pages/login.dart';
 import 'pages/teams/teams_page.dart';
+import 'pages/matches/invitations.dart';
 import 'data/services/auth_service.dart';
 
 void main() {
@@ -124,6 +125,10 @@ class _MainNavigationState extends State<MainNavigation> {
                   icon: Icon(Icons.emoji_events),
                   label: Text('Organise Match'),
                 ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.mail_outline),
+                  label: Text('Invitations'),
+                ),
               ],
             ),
 
@@ -171,6 +176,10 @@ class _MainNavigationState extends State<MainNavigation> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.emoji_events),
                   label: 'Match',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.mail_outline),
+                  label: 'Invites',
                 ),
               ],
             )
@@ -245,6 +254,8 @@ class _MainNavigationState extends State<MainNavigation> {
         return const OrganisePage(); 
       case 6:
         return const OrganiseMatchPage();
+      case 7:
+        return const InvitationsPage();
       default:
         return const DashboardPage();
     }
